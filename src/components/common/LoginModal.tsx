@@ -26,7 +26,7 @@ export const LoginModal = ({ open, onOpenChange, onSuccess }: LoginModalProps) =
     e.preventDefault();
     setLoading(true);
 
-    // Simulación de login sin Firebase (solo para preview)
+    // Modo preview: simulación de login sin Firebase
     setTimeout(() => {
       toast.success('Login exitoso');
       setEmail('');
@@ -38,7 +38,7 @@ export const LoginModal = ({ open, onOpenChange, onSuccess }: LoginModalProps) =
       setLoading(false);
     }, 1000);
 
-    // Código original comentado para cuando se active Firebase:
+    // Código de Firebase real (comentado para modo preview):
     /*
     if (!auth) {
       toast.error("Firebase is not configured. Please check your .env file.");

@@ -86,14 +86,14 @@ const UsersList = () => {
 
       await addDoc(collection(db, 'users'), newUser);
       
-      toast.success('User added successfully');
+      toast.success('Usuario añadido correctamente');
       setIsDialogOpen(false);
       setNewUserEmail('');
       setNewUserPassword('');
       fetchUsers();
     } catch (error: any) {
       console.error("Error adding user:", error);
-      toast.error('Failed to add user: ' + error.message);
+      toast.error('Error al añadir usuario: ' + error.message);
     }
   };
 
@@ -116,18 +116,18 @@ const UsersList = () => {
         updatedAt: serverTimestamp(),
       });
       
-      toast.success('User updated successfully');
+      toast.success('Usuario actualizado correctamente');
       setIsEditDialogOpen(false);
       setEditingUser(null);
       fetchUsers();
     } catch (error: any) {
       console.error("Error updating user:", error);
-      toast.error('Failed to update user: ' + error.message);
+      toast.error('Error al actualizar usuario: ' + error.message);
     }
   };
 
   const handleDeleteUser = async (user: UserWithId) => {
-    if (!confirm(`Are you sure you want to delete user ${user.email}? This action cannot be undone.`)) return;
+    if (!confirm(`¿Estás seguro de que deseas eliminar al usuario ${user.email}? Esta acción no se puede deshacer.`)) return;
     if (!db) return;
 
     try {
@@ -138,70 +138,70 @@ const UsersList = () => {
       try {
         // Note: This requires admin privileges. If it fails, the Firestore deletion still succeeds.
         // In production, you might want to use Firebase Admin SDK for this.
-        toast.success('User deleted from database');
+        toast.success('Usuario eliminado de la base de datos');
       } catch (authError) {
         console.warn("Could not delete user from Auth:", authError);
-        toast.success('User deleted from database (Auth deletion may require admin privileges)');
+        toast.success('Usuario eliminado de la base de datos (La eliminación de Auth puede requerir privilegios de administrador)');
       }
       
       fetchUsers();
     } catch (error: any) {
       console.error("Error deleting user:", error);
-      toast.error('Failed to delete user: ' + error.message);
+      toast.error('Error al eliminar usuario: ' + error.message);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-3xl font-bold tracking-tight">Users</h2>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-3xl font-bold tracking-tight">Usuarios</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>Add User</Button>
+            <Button className="w-full sm:w-auto justify-center">Añadir Usuario</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
+              <DialogTitle>Añadir Nuevo Usuario</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAddUser} className="space-y-4">
               <Input
-                placeholder="Email"
+                placeholder="Correo electrónico"
                 type="email"
                 value={newUserEmail}
                 onChange={(e) => setNewUserEmail(e.target.value)}
                 required
               />
               <Input
-                placeholder="Password"
+                placeholder="Contraseña"
                 type="password"
                 value={newUserPassword}
                 onChange={(e) => setNewUserPassword(e.target.value)}
                 required
               />
-              <Button type="submit" className="w-full">Create User</Button>
+              <Button type="submit" className="w-full">Crear Usuario</Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <div className="border rounded-md">
-        <Table>
+      <div className="border rounded-md overflow-x-auto">
+        <Table className="min-w-[640px] sm:min-w-0">
           <TableHeader>
             <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Display Name</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Correo</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead>Nombre</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">Loading...</TableCell>
+                <TableCell colSpan={4} className="text-center">Cargando...</TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">No users found</TableCell>
+                <TableCell colSpan={4} className="text-center">No se encontraron usuarios</TableCell>
               </TableRow>
             ) : (
               users.map((user) => (
@@ -211,7 +211,7 @@ const UsersList = () => {
                     <span className={`px-2 py-1 rounded-full text-xs ${
                       user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
                     }`}>
-                      {user.role}
+                      {user.role === 'admin' ? 'Administrador' : 'Editor'}
                     </span>
                   </TableCell>
                   <TableCell>{user.displayName}</TableCell>
@@ -236,44 +236,44 @@ const UsersList = () => {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleUpdateUser} className="space-y-4">
+            <DialogTitle>Editar Usuario</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdateUser} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-sm font-medium">Correo</label>
               <Input
                 value={editingUser?.email || ''}
                 disabled
                 className="bg-gray-50"
               />
-              <p className="text-xs text-gray-500">Email cannot be changed</p>
+              <p className="text-xs text-gray-500">El correo no se puede cambiar</p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Display Name</label>
+              <label className="text-sm font-medium">Nombre</label>
               <Input
-                placeholder="Display Name"
+                placeholder="Nombre"
                 value={editDisplayName}
                 onChange={(e) => setEditDisplayName(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Role</label>
+              <label className="text-sm font-medium">Rol</label>
               <Select value={editRole} onValueChange={(value: 'admin' | 'editor') => setEditRole(value)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
+                  <SelectValue placeholder="Seleccionar rol" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="admin">Administrador</SelectItem>
                   <SelectItem value="editor">Editor</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex justify-end gap-4">
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Cancel
+                Cancelar
               </Button>
-              <Button type="submit">Update User</Button>
+              <Button type="submit">Actualizar Usuario</Button>
             </div>
           </form>
         </DialogContent>

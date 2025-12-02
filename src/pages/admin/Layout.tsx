@@ -18,22 +18,22 @@ const AdminLayout = () => {
 
   const handleLogout = async () => {
     await signOut(auth);
-    navigate("/admin/login");
+    navigate("/");
   };
 
   const sidebarLinks = [
     {
-      label: "Dashboard",
+      label: "Panel de Control",
       href: "/admin",
       icon: <LayoutDashboard className="w-5 h-5" />,
     },
     {
-      label: "Vehicles",
+      label: "Coches",
       href: "/admin/cars",
       icon: <Car className="w-5 h-5" />,
     },
     {
-      label: "Users",
+      label: "Usuarios",
       href: "/admin/users",
       icon: <Users className="w-5 h-5" />,
     },
@@ -43,13 +43,13 @@ const AdminLayout = () => {
 
   return (
     <SidebarProvider open={sidebarOpen} setOpen={setSidebarOpen} animate={true}>
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex min-h-screen bg-gray-100">
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} animate={true}>
           <SidebarBody className="flex flex-col justify-between">
             <div>
               <div className="p-6">
                 <h1 className="text-2xl text-gray-800 dark:text-gray-200">
-                  Admin Panel
+                  Panel de Administración
                 </h1>
               </div>
               <nav className="mt-6 space-y-2 px-4">
@@ -76,14 +76,14 @@ const AdminLayout = () => {
                 className="flex items-center gap-2 w-full px-3 py-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-neutral-700 dark:text-neutral-200"
               >
                 <LogOut className="w-5 h-5" />
-                <span className="text-sm">Logout</span>
+                <span className="text-sm">Cerrar Sesión</span>
               </button>
             </div>
           </SidebarBody>
         </Sidebar>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <PageTransition>
             <Outlet />
           </PageTransition>

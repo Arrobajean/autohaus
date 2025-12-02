@@ -22,7 +22,7 @@ export const CarImageGallery = ({
   return (
     <>
       {/* Main Image */}
-      <div className="rounded-2xl overflow-hidden shadow-lg h-[400px] w-full max-w-[380px] mx-auto md:h-[996px] md:max-w-full mb-6">
+      <div className="rounded-2xl overflow-hidden shadow-lg h-[400px] w-full max-w-[380px] mx-auto md:h-[996px] md:max-w-full mb-6 md:mb-16">
         <img
           src={car.images[selectedImageIndex]}
           alt={`${car.make} ${car.model} - Vista ${selectedImageIndex + 1}`}

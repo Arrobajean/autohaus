@@ -18,18 +18,18 @@ const Login = () => {
     setLoading(true);
 
     if (!auth) {
-      toast.error("Firebase is not configured. Please check your .env file.");
+      toast.error("Firebase no está configurado. Por favor, verifica tu archivo .env");
       setLoading(false);
       return;
     }
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast.success('Login successful');
+      toast.success('Inicio de sesión exitoso');
       navigate('/admin');
     } catch (error: any) {
       console.error(error);
-      toast.error('Failed to login: ' + error.message);
+      toast.error('Error al iniciar sesión: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -39,14 +39,14 @@ const Login = () => {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">Admin Login</CardTitle>
+          <CardTitle className="text-2xl text-center">Acceso de Administrador</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Input
                 type="email"
-                placeholder="Email"
+                placeholder="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -55,14 +55,14 @@ const Login = () => {
             <div className="space-y-2">
               <Input
                 type="password"
-                placeholder="Password"
+                placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
             </Button>
           </form>
         </CardContent>

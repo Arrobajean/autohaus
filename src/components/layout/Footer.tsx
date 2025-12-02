@@ -23,7 +23,7 @@ const Footer = memo<FooterProps>(({ showCredit = true }) => {
   };
 
   const handleLoginSuccess = () => {
-    // Navegar a la gestión de vehículos después del login exitoso
+    // Navegar directamente al admin después del login exitoso
     navigate('/admin/cars');
   };
 
@@ -110,14 +110,20 @@ const Footer = memo<FooterProps>(({ showCredit = true }) => {
 
             {/* Fourth line: Admin Access */}
             <div className="text-center">
-              <Link
-                to={user ? "/admin/cars" : "#"}
-                onClick={handleAdminClick}
-                className="text-[9px] text-gray-400 hover:text-gray-600 transition-colors duration-200 flex items-center justify-center gap-1.5"
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (user) {
+                    navigate('/admin/cars');
+                  } else {
+                    setIsLoginModalOpen(true);
+                  }
+                }}
+                className="text-[9px] text-gray-400 hover:text-gray-600 transition-colors duration-200 flex items-center justify-center gap-1.5 mx-auto"
               >
                 <Settings className="w-3.5 h-3.5" />
-                <span>Gestión de Vehículos</span>
-              </Link>
+                <span>Gestión de Coches</span>
+              </button>
             </div>
           </div>
         </div>
