@@ -12,8 +12,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { generateCarSlug } from '@/data/carsHelpers';
 
 const CarsList = () => {
   const [cars, setCars] = useState<Car[]>([]);
@@ -58,38 +59,39 @@ const CarsList = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Coches</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Coches</h2>
         <Link to="/admin/cars/new">
-          <Button className="w-full sm:w-auto justify-center">
-            <Plus className="w-4 h-4 mr-2" />
-            Añadir Vehículo
+          <Button className="w-full sm:w-auto justify-center text-xs sm:text-sm" size="sm">
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Añadir Vehículo</span>
+            <span className="sm:hidden">Añadir</span>
           </Button>
         </Link>
       </div>
 
-      <div className="border rounded-md overflow-x-auto">
+      <div className="border rounded-md overflow-x-auto -mx-3 sm:mx-0">
         <Table className="min-w-[720px] sm:min-w-0">
           <TableHeader>
             <TableRow>
-              <TableHead>Imagen</TableHead>
-              <TableHead>Marca</TableHead>
-              <TableHead>Modelo</TableHead>
-              <TableHead>Año</TableHead>
-              <TableHead>Precio</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
+              <TableHead className="text-xs sm:text-sm">Imagen</TableHead>
+              <TableHead className="text-xs sm:text-sm">Marca</TableHead>
+              <TableHead className="text-xs sm:text-sm">Modelo</TableHead>
+              <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Año</TableHead>
+              <TableHead className="text-xs sm:text-sm">Precio</TableHead>
+              <TableHead className="text-xs sm:text-sm hidden md:table-cell">Estado</TableHead>
+              <TableHead className="text-right text-xs sm:text-sm">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">Cargando...</TableCell>
+                <TableCell colSpan={7} className="text-center text-xs sm:text-sm py-4">Cargando...</TableCell>
               </TableRow>
             ) : cars.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">No se encontraron vehículos</TableCell>
+                <TableCell colSpan={7} className="text-center text-xs sm:text-sm py-4">No se encontraron vehículos</TableCell>
               </TableRow>
             ) : (
               cars.map((car) => (
@@ -98,17 +100,17 @@ const CarsList = () => {
                   className="cursor-pointer hover:bg-gray-50"
                   onClick={() => handleRowClick(car.id)}
                 >
-                  <TableCell>
+                  <TableCell className="py-2 sm:py-4">
                     {car.images && car.images.length > 0 && (
-                      <img src={car.images[0]} alt={car.model} className="w-16 h-10 object-cover rounded" />
+                      <img src={car.images[0]} alt={car.model} className="w-12 h-8 sm:w-16 sm:h-10 object-cover rounded" />
                     )}
                   </TableCell>
-                  <TableCell>{car.make}</TableCell>
-                  <TableCell>{car.model}</TableCell>
-                  <TableCell>{car.year}</TableCell>
-                  <TableCell>{car.price.toLocaleString()} €</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
+                  <TableCell className="text-xs sm:text-sm py-2 sm:py-4">{car.make}</TableCell>
+                  <TableCell className="text-xs sm:text-sm py-2 sm:py-4">{car.model}</TableCell>
+                  <TableCell className="text-xs sm:text-sm py-2 sm:py-4 hidden sm:table-cell">{car.year}</TableCell>
+                  <TableCell className="text-xs sm:text-sm py-2 sm:py-4 font-medium">{car.price.toLocaleString()} €</TableCell>
+                  <TableCell className="py-2 sm:py-4 hidden md:table-cell">
+                    <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs ${
                       car.status === 'available' ? 'bg-green-100 text-green-800' :
                       car.status === 'sold' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
                     }`}>
@@ -116,28 +118,43 @@ const CarsList = () => {
                        car.status === 'sold' ? 'Vendido' : 'Reservado'}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                  <TableCell className="text-right py-2 sm:py-4">
+                    <div className="flex justify-end gap-1 sm:gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 sm:h-10 sm:w-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const slug = generateCarSlug(car);
+                          window.open(`/coches/${slug}`, '_blank');
+                        }}
+                        title="Ver página pública"
+                      >
+                        <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </Button>
                       <Link to={`/admin/cars/${car.id}`} onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"
                           size="icon"
+                          className="h-7 w-7 sm:h-10 sm:w-10"
                           onClick={(e) => {
                             e.stopPropagation();
                           }}
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                         </Button>
                       </Link>
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-7 w-7 sm:h-10 sm:w-10"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDelete(car.id);
                         }}
                       >
-                        <Trash2 className="w-4 h-4 text-red-500" />
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                       </Button>
                     </div>
                   </TableCell>

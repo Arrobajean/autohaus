@@ -11,6 +11,7 @@ export interface Car {
   description: string;
   category?: string;
   status: "available" | "sold" | "reserved";
+  featured?: boolean; // Si el coche aparece en la sección de destacados del landing
   createdAt: Date;
   updatedAt: Date;
   // Especificaciones técnicas

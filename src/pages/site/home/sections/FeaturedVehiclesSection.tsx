@@ -20,19 +20,45 @@ const FeaturedVehiclesSection = memo(() => {
         return;
       }
       try {
-        const q = query(
+        // Primero intentar obtener coches marcados como destacados
+        // Nota: Si Firestore da error por índice compuesto, se usará el fallback
+        try {
+          const featuredQuery = query(
+            collection(db, "cars"),
+            where("status", "==", "available"),
+            where("featured", "==", true),
+            limit(6)
+          );
+          const featuredSnapshot = await getDocs(featuredQuery);
+          
+          if (!featuredSnapshot.empty) {
+            const cars = featuredSnapshot.docs.map(
+              (doc) => ({ id: doc.id, ...doc.data() } as Car)
+            );
+            setFeaturedCars(cars);
+            return;
+          }
+        } catch (queryError: any) {
+          // Si la consulta falla (por ejemplo, falta índice compuesto), usar fallback
+          console.warn("Error en consulta de destacados, usando fallback:", queryError);
+        }
+        
+        // Si no hay destacados o la consulta falló, usar los primeros disponibles como fallback
+        const fallbackQuery = query(
           collection(db, "cars"),
           where("status", "==", "available"),
           limit(6)
         );
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
+        const fallbackSnapshot = await getDocs(fallbackQuery);
+        if (fallbackSnapshot.empty) {
           setFeaturedCars(getAvailableCars().slice(0, 6));
         } else {
-          const cars = querySnapshot.docs.map(
+          // Filtrar manualmente los destacados si existen
+          const allCars = fallbackSnapshot.docs.map(
             (doc) => ({ id: doc.id, ...doc.data() } as Car)
           );
-          setFeaturedCars(cars);
+          const featured = allCars.filter(car => car.featured === true);
+          setFeaturedCars(featured.length > 0 ? featured.slice(0, 6) : allCars.slice(0, 6));
         }
       } catch (error) {
         console.error("Error fetching featured cars:", error);

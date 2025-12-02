@@ -152,16 +152,19 @@ const UsersList = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Usuarios</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Usuarios</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto justify-center">Añadir Usuario</Button>
+            <Button className="w-full sm:w-auto justify-center text-xs sm:text-sm" size="sm">
+              <span className="hidden sm:inline">Añadir Usuario</span>
+              <span className="sm:hidden">Añadir</span>
+            </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Añadir Nuevo Usuario</DialogTitle>
+              <DialogTitle className="text-lg sm:text-xl">Añadir Nuevo Usuario</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAddUser} className="space-y-4">
               <Input
@@ -184,44 +187,44 @@ const UsersList = () => {
         </Dialog>
       </div>
 
-      <div className="border rounded-md overflow-x-auto">
+      <div className="border rounded-md overflow-x-auto -mx-3 sm:mx-0">
         <Table className="min-w-[640px] sm:min-w-0">
           <TableHeader>
             <TableRow>
-              <TableHead>Correo</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Nombre</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
+              <TableHead className="text-xs sm:text-sm">Correo</TableHead>
+              <TableHead className="text-xs sm:text-sm">Rol</TableHead>
+              <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Nombre</TableHead>
+              <TableHead className="text-right text-xs sm:text-sm">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">Cargando...</TableCell>
+                <TableCell colSpan={4} className="text-center text-xs sm:text-sm py-4">Cargando...</TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center">No se encontraron usuarios</TableCell>
+                <TableCell colSpan={4} className="text-center text-xs sm:text-sm py-4">No se encontraron usuarios</TableCell>
               </TableRow>
             ) : (
               users.map((user) => (
                 <TableRow key={user.uid}>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
+                  <TableCell className="text-xs sm:text-sm py-2 sm:py-4 break-all">{user.email}</TableCell>
+                  <TableCell className="py-2 sm:py-4">
+                    <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs ${
                       user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
                     }`}>
-                      {user.role === 'admin' ? 'Administrador' : 'Editor'}
+                      {user.role === 'admin' ? 'Admin' : 'Editor'}
                     </span>
                   </TableCell>
-                  <TableCell>{user.displayName}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleEditUser(user)}>
-                        <Pencil className="w-4 h-4" />
+                  <TableCell className="text-xs sm:text-sm py-2 sm:py-4 hidden sm:table-cell">{user.displayName}</TableCell>
+                  <TableCell className="text-right py-2 sm:py-4">
+                    <div className="flex justify-end gap-1 sm:gap-2">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-10 sm:w-10" onClick={() => handleEditUser(user)}>
+                        <Pencil className="w-3 h-3 sm:w-4 sm:h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(user)}>
-                        <Trash2 className="w-4 h-4 text-red-500" />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-10 sm:w-10" onClick={() => handleDeleteUser(user)}>
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                       </Button>
                     </div>
                   </TableCell>
@@ -234,33 +237,34 @@ const UsersList = () => {
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar Usuario</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">Editar Usuario</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleUpdateUser} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Correo</label>
+              <label className="text-xs sm:text-sm font-medium">Correo</label>
               <Input
                 value={editingUser?.email || ''}
                 disabled
-                className="bg-gray-50"
+                className="bg-gray-50 text-xs sm:text-sm"
               />
-              <p className="text-xs text-gray-500">El correo no se puede cambiar</p>
+              <p className="text-[10px] sm:text-xs text-gray-500">El correo no se puede cambiar</p>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Nombre</label>
+              <label className="text-xs sm:text-sm font-medium">Nombre</label>
               <Input
                 placeholder="Nombre"
                 value={editDisplayName}
                 onChange={(e) => setEditDisplayName(e.target.value)}
                 required
+                className="text-xs sm:text-sm"
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Rol</label>
+              <label className="text-xs sm:text-sm font-medium">Rol</label>
               <Select value={editRole} onValueChange={(value: 'admin' | 'editor') => setEditRole(value)}>
-                <SelectTrigger>
+                <SelectTrigger className="text-xs sm:text-sm">
                   <SelectValue placeholder="Seleccionar rol" />
                 </SelectTrigger>
                 <SelectContent>
@@ -269,11 +273,11 @@ const UsersList = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex justify-end gap-4">
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="w-full sm:w-auto text-xs sm:text-sm">
                 Cancelar
               </Button>
-              <Button type="submit">Actualizar Usuario</Button>
+              <Button type="submit" className="w-full sm:w-auto text-xs sm:text-sm">Actualizar Usuario</Button>
             </div>
           </form>
         </DialogContent>

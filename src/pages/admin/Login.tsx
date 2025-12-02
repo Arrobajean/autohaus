@@ -36,12 +36,12 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">Acceso de Administrador</CardTitle>
+        <CardHeader className="px-4 sm:px-6 pt-6 sm:pt-6">
+          <CardTitle className="text-xl sm:text-2xl text-center">Acceso de Administrador</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 sm:px-6 pb-6 sm:pb-6">
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Input

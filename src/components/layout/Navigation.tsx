@@ -30,6 +30,7 @@ const NavCtaButton = ({ isScrolled = false }: { isScrolled?: boolean }) => (
     ariaLabel="Pedir cita"
     backgroundColor={isScrolled ? "bg-black" : "bg-white"}
     textColor={isScrolled ? "text-white" : "text-black"}
+    className="px-6 md:px-8"
   />
 );
 
@@ -185,7 +186,7 @@ const Navigation = memo(() => {
             </div>
 
             {/* CTA Button - Right */}
-            <div className="flex justify-end">
+            <div className="flex justify-end items-center min-w-0">
               <NavCtaButton isScrolled={isScrolled} />
             </div>
           </div>

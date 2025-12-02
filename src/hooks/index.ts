@@ -8,3 +8,4 @@ export { useWhatsApp } from "./useWhatsApp";
 export { useResponsiveAnimation } from "./useResponsiveAnimation";
 export { useHamburgerMenu } from "./useHamburgerMenu";
 export { useHamburgerMenuAnimations } from "./useHamburgerMenuAnimations";
+export { useDashboard } from "./useDashboard";
