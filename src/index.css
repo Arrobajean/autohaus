@@ -1,0 +1,845 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom animations for Liquid Glass Button */
+@keyframes liquid-glow {
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes liquid-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes liquid-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes liquid-float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+
+@layer base {
+  :root {
+    /* Color negro personalizado del proyecto */
+    --black-custom: #212121;
+    --black-custom-rgb: 33, 33, 33;
+
+    /* Fondo general más suave - Cararra */
+    --background: 30 14% 96%;
+    /* #F5F4F2 - Cararra */
+    --foreground: 0 0% 0%;
+
+    --card: 45 15% 94%;
+    /* Slightly darker than background for contrast */
+    --card-foreground: 0 0% 0%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 45 12% 93%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 45 10% 92%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 90%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 0%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 45 18% 95%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 0 0% 0%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 8% 90%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 45 5% 88%;
+    --sidebar-ring: 0 0% 0%;
+  }
+
+  .dark {
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 100%;
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    overflow-x: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", sans-serif !important;
+    background-color: #F5F4F2 !important;
+  }
+
+  html {
+    background-color: #F5F4F2 !important;
+  }
+
+  #root {
+    background-color: #F5F4F2 !important;
+  }
+
+  .min-h-screen {
+    background-color: #F5F4F2 !important;
+  }
+
+  /* Forzar el color de fondo Cararra solo en main y divs con "section" en la clase, pero NO en elementos section */
+  main {
+    background-color: #F5F4F2 !important;
+  }
+  
+  /* Solo aplicar a divs con "section" en el nombre de clase, no a elementos <section> */
+  div[class*="section"]:not([style*="background"]):not([class*="bg-"]) {
+    background-color: #F5F4F2 !important;
+  }
+
+  /* Configuración de fuentes para diferentes elementos */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Inter", sans-serif !important;
+  }
+
+  h1,
+  h1.tracking-tight,
+  h1[class*="tracking"] {
+    letter-spacing: -0.05em !important;
+  }
+
+  p {
+    font-family: "Inter", sans-serif !important;
+    line-height: 1.2em !important;
+    letter-spacing: 0 !important;
+    font-size: 16px !important;
+    text-align: start !important;
+    font-weight: 400 !important;
+    text-wrap: pretty !important;
+  }
+
+  span,
+  div,
+  li {
+    font-family: "Inter", sans-serif !important;
+  }
+
+  button,
+  .btn,
+  .glass-button,
+  .glass-button-dark,
+  button[class*="font-"],
+  .btn[class*="font-"],
+  [class*="glass-button"][class*="font-"],
+  button.font-medium,
+  button.font-semibold,
+  button.font-bold,
+  .font-medium button,
+  .font-semibold button,
+  .font-bold button {
+    font-family: "Inter", sans-serif !important;
+  }
+
+  /* Estilos para texto seleccionado */
+  ::selection {
+    background-color: var(--black-custom);
+    color: #ffffff;
+  }
+
+  ::-moz-selection {
+    background-color: var(--black-custom);
+    color: #ffffff;
+  }
+
+  /* Asegurar que los enlaces dentro de botones no tengan color azul por defecto */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  a:visited {
+    color: inherit;
+  }
+
+  a:hover {
+    color: inherit;
+  }
+
+  a:active {
+    color: inherit;
+  }
+
+  /* Específicamente para enlaces que contienen botones - forzar color negro cuando el botón tiene bg-black */
+  a button[class*="bg-black"],
+  a button[class*="bg-gray-900"] {
+    background-color: var(--black-custom) !important;
+    color: #ffffff !important;
+  }
+
+  a button[class*="bg-black"] *,
+  a button[class*="bg-gray-900"] * {
+    color: #ffffff !important;
+  }
+}
+
+@layer components {
+
+  /* Glass effect utilities */
+  .glass {
+    @apply backdrop-blur-md border border-white/20;
+    background-color: rgba(245, 244, 242, 0.8) !important;
+  }
+
+  .glass-dark {
+    @apply backdrop-blur-md border border-white/10;
+    background-color: rgba(var(--black-custom-rgb), 0.2) !important;
+  }
+
+  .glass-card {
+    @apply backdrop-blur-lg border border-white/20 shadow-lg;
+    background-color: rgba(245, 244, 242, 0.6) !important;
+  }
+
+  .glass-nav {
+    @apply backdrop-blur-xl border-b border-white/20;
+    background-color: rgba(245, 244, 242, 0.9) !important;
+  }
+
+  .glass-nav-dark {
+    @apply backdrop-blur-xl border-b;
+    background-color: rgba(var(--black-custom-rgb), 0.7) !important;
+    border-bottom-color: rgba(var(--black-custom-rgb), 0.2) !important;
+  }
+
+  /* Force header to stick to top */
+  .header-fixed {
+    top: 0 !important;
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+
+  .glass-button-dark {
+    @apply backdrop-blur-xl transition-all duration-500 shadow-glass;
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.25) 0%,
+        rgba(255, 255, 255, 0.15) 50%,
+        rgba(255, 255, 255, 0.1) 100%) !important;
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    color: #ffffff !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 8px 32px 0 rgba(var(--black-custom-rgb), 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+      0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-button-dark::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent);
+    transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+
+  .glass-button-dark>* {
+    position: relative;
+    z-index: 2;
+  }
+
+  .glass-button-dark:hover::before {
+    left: 100%;
+  }
+
+  .glass-button-dark:hover {
+    background: linear-gradient(135deg,
+        rgba(255, 255, 255, 0.35) 0%,
+        rgba(255, 255, 255, 0.25) 50%,
+        rgba(255, 255, 255, 0.2) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    color: #ffffff !important;
+    box-shadow:
+      0 16px 48px 0 rgba(var(--black-custom-rgb), 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-button-dark:active {
+    transition-duration: 0.1s;
+  }
+
+  /* Efecto glass minimalista estilo Apple */
+  .glass-hero-button {
+    @apply transition-all duration-300;
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    position: relative;
+    box-shadow: 0 4px 16px 0 rgba(var(--black-custom-rgb), 0.2);
+  }
+
+  .glass-hero-button:hover {
+    background: rgba(255, 255, 255, 0.25) !important;
+    border: 0.5px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 8px 24px 0 rgba(var(--black-custom-rgb), 0.3);
+  }
+
+  .glass-hero-button:active {
+    transition-duration: 0.1s;
+  }
+
+  /* Animación de bounce sutil para botones */
+  @keyframes subtle-bounce {
+    0% {
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    25% {
+      transform: translateY(-4px) scale(1.03);
+    }
+
+    50% {
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    75% {
+      transform: translateY(-3px) scale(1.025);
+    }
+
+    100% {
+      transform: translateY(-2px) scale(1.02);
+    }
+  }
+
+  /* Animación de bounce sutil para el logo */
+  @keyframes logo-bounce {
+    0% {
+      transform: translateY(0) scale(1);
+    }
+
+    25% {
+      transform: translateY(-3px) scale(1.05);
+    }
+
+    50% {
+      transform: translateY(-1px) scale(1.02);
+    }
+
+    75% {
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    100% {
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  /* Mejora para dispositivos móviles */
+  @media (max-width: 640px) {
+    .glass-hero-button {
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+    }
+
+    .glass-hero-button:hover {}
+  }
+
+  .glass-footer {
+    @apply backdrop-blur-sm border-t border-white/20;
+    background-color: rgba(245, 244, 242, 0.4) !important;
+  }
+
+
+  /* Glass button para fondo blanco - efecto sutil y elegante */
+  .glass-button-white-bg {
+    @apply transition-all duration-300 font-medium;
+    background: linear-gradient(135deg,
+        rgba(var(--black-custom-rgb), 0.9) 0%,
+        rgba(var(--black-custom-rgb), 0.95) 50%,
+        rgba(var(--black-custom-rgb), 0.98) 100%) !important;
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 4px 16px 0 rgba(var(--black-custom-rgb), 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.02),
+      0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+
+  .glass-button-white-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.08),
+        transparent);
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+
+  .glass-button-white-bg>* {
+    position: relative;
+    z-index: 2;
+  }
+
+  .glass-button-white-bg:hover::before {
+    left: 100%;
+  }
+
+  .glass-button-white-bg:hover {
+    background: linear-gradient(135deg,
+        rgba(var(--black-custom-rgb), 0.95) 0%,
+        rgba(var(--black-custom-rgb), 0.98) 50%,
+        var(--black-custom) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-shadow:
+      0 8px 24px 0 rgba(var(--black-custom-rgb), 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.04),
+      0 0 0 1px rgba(255, 255, 255, 0.06);
+  }
+
+  .glass-button-white-bg:active {
+    transition-duration: 0.1s;
+  }
+
+  /* Glass button verde para CTA */
+  .glass-button-green {
+    @apply transition-all duration-300 font-medium;
+    background: linear-gradient(135deg,
+        rgba(34, 197, 94, 0.6) 0%,
+        rgba(34, 197, 94, 0.7) 50%,
+        rgba(34, 197, 94, 0.8) 100%) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: #ffffff !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 8px 32px 0 rgba(34, 197, 94, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-button-green::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent);
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+
+  .glass-button-green>* {
+    position: relative;
+    z-index: 2;
+  }
+
+  .glass-button-green:hover::before {
+    left: 100%;
+  }
+
+  .glass-button-green:hover {
+    background: linear-gradient(135deg,
+        rgba(34, 197, 94, 0.8) 0%,
+        rgba(34, 197, 94, 0.85) 50%,
+        rgba(34, 197, 94, 0.9) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    transform: translateY(-2px);
+    box-shadow:
+      0 12px 40px 0 rgba(34, 197, 94, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.25);
+  }
+
+  .glass-button-green:active {
+    transform: translateY(-1px);
+    transition-duration: 0.1s;
+  }
+
+  /* Glass button para fondo Cararra - efecto sutil y elegante */
+  .glass-button-cararra {
+    @apply transition-all duration-300 font-medium;
+    background: linear-gradient(135deg,
+        rgba(var(--black-custom-rgb), 0.7) 0%,
+        rgba(var(--black-custom-rgb), 0.8) 50%,
+        rgba(var(--black-custom-rgb), 0.9) 100%) !important;
+    backdrop-filter: blur(40px) saturate(150%);
+    -webkit-backdrop-filter: blur(40px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 8px 32px 0 rgba(var(--black-custom-rgb), 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+      0 0 0 1px rgba(255, 255, 255, 0.15);
+  }
+
+  .glass-button-cararra::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.1),
+        transparent);
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+
+  .glass-button-cararra>* {
+    position: relative;
+    z-index: 2;
+  }
+
+  .glass-button-cararra:hover::before {
+    left: 100%;
+  }
+
+  .glass-button-cararra:hover {
+    background: linear-gradient(135deg,
+        rgba(var(--black-custom-rgb), 0.8) 0%,
+        rgba(var(--black-custom-rgb), 0.9) 50%,
+        rgba(var(--black-custom-rgb), 0.95) 100%) !important;
+    backdrop-filter: blur(50px) saturate(180%);
+    -webkit-backdrop-filter: blur(50px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow:
+      0 12px 40px 0 rgba(var(--black-custom-rgb), 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.15),
+      0 0 0 1px rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-button-cararra:active {
+    transition-duration: 0.1s;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Glass shadows */
+  .shadow-glass {
+    box-shadow:
+      0 8px 32px 0 rgba(var(--black-custom-rgb), 0.1),
+      0 4px 16px 0 rgba(var(--black-custom-rgb), 0.05),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  .shadow-glass-lg {
+    box-shadow:
+      0 25px 50px -12px rgba(var(--black-custom-rgb), 0.15),
+      0 12px 24px 0 rgba(var(--black-custom-rgb), 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+
+  .shadow-glass-xl {
+    box-shadow:
+      0 35px 60px -12px rgba(var(--black-custom-rgb), 0.25),
+      0 16px 32px 0 rgba(var(--black-custom-rgb), 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  /* Performance optimizations for INP */
+  .optimize-interactions {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  .fast-transitions {
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+
+  .touch-optimized {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Variable global para altura del header calculada por JS */
+  :root {
+    --header-height: 0px;
+  }
+
+  /* Accessibility: Respect user's motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+
+    .animate-fade-in,
+    .animate-slide-up,
+    .animate-scale,
+    .transition-all,
+    .transition-colors,
+    .transition-transform,
+    .transition-opacity {
+      animation: none !important;
+      transition: none !important;
+    }
+
+    /* Keep essential transitions for focus states */
+    *:focus-visible {
+      transition: outline 0.15s ease-out !important;
+    }
+  }
+
+  /* Enhanced focus indicators for better accessibility */
+  .focus-enhanced:focus-visible {
+    outline: 2px solid var(--black-custom);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Ensure minimum touch target size (44x44px) */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Line clamp utilities for text truncation */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  /* Logo bounce animation */
+  .animate-logo-bounce {
+    animation: logo-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Text wrapping utility for long content */
+  .text-wrap-safe {
+    white-space: pre-wrap;
+    width: 100%;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+}
+
+/* Forzar Inter en todos los botones - Máxima prioridad */
+button,
+a[role="button"],
+[role="button"],
+.btn,
+button *,
+a[role="button"] *,
+[role="button"] * {
+  font-family: "Inter", sans-serif !important;
+}
+
+/* Animaciones para el menú hamburguesa */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+    opacity: 0.2;
+  }
+
+  50% {
+    transform: translateY(-20px);
+    opacity: 0.4;
+  }
+}
+
+/* Estilos para elementos del menú hamburguesa */
+.hamburger-menu-item {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.hamburger-menu-item:hover {
+  transform: translateX(10px);
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.hamburger-menu-item::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  transition: width 0.3s ease;
+}
+
+.hamburger-menu-item:hover::before {
+  width: 15px;
+}
+
+/* Masonry layout styles */
+.masonry-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Prevent horizontal overflow in masonry */
+.flex.gap-4 {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure masonry container doesn't overflow */
+.masonry-container {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure masonry images don't overflow on mobile */
+@media (max-width: 768px) {
+  .masonry-container {
+    padding: 0 1rem;
+  }
+
+  .masonry-column {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .masonry-column .glass-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 1rem 0 !important;
+  }
+}
