@@ -23,8 +23,9 @@ const Dashboard = () => {
       try {
         const carsSnapshot = await getDocs(collection(db, 'cars'));
         setTotalCars(carsSnapshot.size);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching stats:', error);
+        toast.error('Error al conectar con Firebase: ' + (error.message || 'Verifica las variables de entorno en Vercel'));
       } finally {
         setLoading(false);
       }
@@ -149,7 +150,7 @@ const Dashboard = () => {
               {db ? '✅' : '❌'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {db ? 'Conectado' : 'Desconectado'}
+              {db ? 'Conectado' : 'Desconectado - Configura variables de entorno en Vercel'}
             </p>
           </CardContent>
         </Card>
