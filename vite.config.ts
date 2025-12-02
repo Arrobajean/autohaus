@@ -31,20 +31,16 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            // React, React-DOM y todas las dependencias de React juntas
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || 
-                id.includes('@radix-ui') || id.includes('@tanstack/react-query') || 
-                id.includes('react-hook-form') || id.includes('react-helmet')) {
-              return 'react-vendor';
-            }
-            // Firebase puede estar separado
+            // Firebase separado (grande y no depende de React)
             if (id.includes('firebase')) {
               return 'firebase-vendor';
             }
-            // Animaciones pueden estar separadas
+            // Animaciones separadas (grandes y no dependen de React)
             if (id.includes('framer-motion') || id.includes('gsap') || id.includes('lenis')) {
               return 'animation-vendor';
             }
+            // Todo lo demás (incluyendo React y sus dependencias) va junto
+            // Vite manejará automáticamente las dependencias de React correctamente
             return 'vendor';
           }
         },
