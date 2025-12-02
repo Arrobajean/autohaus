@@ -31,18 +31,17 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: (id) => {
           if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+            // React, React-DOM y todas las dependencias de React juntas
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router') || 
+                id.includes('@radix-ui') || id.includes('@tanstack/react-query') || 
+                id.includes('react-hook-form') || id.includes('react-helmet')) {
               return 'react-vendor';
             }
-            if (id.includes('@radix-ui')) {
-              return 'ui-vendor';
-            }
-            if (id.includes('@tanstack/react-query')) {
-              return 'query-vendor';
-            }
+            // Firebase puede estar separado
             if (id.includes('firebase')) {
               return 'firebase-vendor';
             }
+            // Animaciones pueden estar separadas
             if (id.includes('framer-motion') || id.includes('gsap') || id.includes('lenis')) {
               return 'animation-vendor';
             }
@@ -67,6 +66,18 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 1000,
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom', 'firebase/app', 'firebase/firestore', 'firebase/auth', 'firebase/storage'],
+    include: [
+      'react',
+      'react-dom',
+      'react/jsx-runtime',
+      'react-router-dom',
+      'firebase/app',
+      'firebase/firestore',
+      'firebase/auth',
+      'firebase/storage'
+    ],
+    esbuildOptions: {
+      target: 'esnext',
+    },
   },
 }));
