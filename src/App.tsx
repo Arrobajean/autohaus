@@ -27,6 +27,7 @@ const Dashboard = lazy(() => import("@/pages/admin/Dashboard"));
 const UsersList = lazy(() => import("@/pages/admin/Users"));
 const CarsList = lazy(() => import("@/pages/admin/Cars"));
 const CarForm = lazy(() => import("@/pages/admin/CarForm"));
+const Settings = lazy(() => import("@/pages/admin/Settings"));
 
 // Loading fallback component
 const PageLoader = () => (
@@ -69,6 +70,7 @@ const App = () => {
                     <Route path="cars/new" element={<CarForm />} />
                     <Route path="cars/:id" element={<CarForm />} />
                     <Route path="users" element={<UsersList />} />
+                    <Route path="settings" element={<Settings />} />
                   </Route>
                 </Route>
               </Routes>

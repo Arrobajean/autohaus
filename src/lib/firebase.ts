@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -39,6 +39,7 @@ try {
 export const db = app ? getFirestore(app) : null;
 export const auth = app ? getAuth(app) : null;
 export const storage = app ? getStorage(app) : null;
+export const googleProvider = new GoogleAuthProvider();
 
 if (!isConfigured && typeof window !== 'undefined') {
   console.warn('⚠️ Firebase no está disponible. La aplicación funcionará en modo limitado.');

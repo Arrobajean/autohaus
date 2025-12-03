@@ -1,4 +1,5 @@
 import { useContactForm } from "../hooks/useContactForm";
+import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 
 const ContactForm = () => {
   const {
@@ -99,34 +100,13 @@ const ContactForm = () => {
         </div>
 
         <div className="flex items-start gap-3">
-          <div className="relative flex-shrink-0 mt-0.5">
-            <input
-              type="checkbox"
-              id="privacy"
-              checked={privacyAccepted}
-              onChange={(e) => setPrivacyAccepted(e.target.checked)}
-              required
-              className="sr-only peer"
-            />
-            <label
-              htmlFor="privacy"
-              className="relative flex items-center justify-center w-5 h-5 bg-black rounded cursor-pointer transition-all duration-200 hover:bg-gray-800 peer-checked:bg-black"
-            >
-              <svg
-                className={`w-3.5 h-3.5 text-white transition-opacity duration-200 ${
-                  privacyAccepted ? "opacity-100" : "opacity-0"
-                }`}
-                fill="none"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="3"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M5 13l4 4L19 7"></path>
-              </svg>
-            </label>
-          </div>
+          <Checkbox
+            id="privacy"
+            checked={privacyAccepted}
+            onCheckedChange={(checked) => setPrivacyAccepted(checked === true)}
+            required
+            className="mt-0.5"
+          />
           <label
             htmlFor="privacy"
             className="text-sm text-gray-600 cursor-pointer flex-1 leading-relaxed"

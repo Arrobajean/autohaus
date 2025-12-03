@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { UserProfile } from '@/types';
 
 interface AuthContextType {
@@ -37,11 +37,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (firebaseUser && db) {
         try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          const userRef = doc(db, 'users', firebaseUser.uid);
+          const userDoc = await getDoc(userRef);
+          
           if (userDoc.exists()) {
             setUserProfile(userDoc.data() as UserProfile);
           } else {
-             setUserProfile(null);
+            // Crear perfil automáticamente si no existe (útil para autenticación con Google)
+            const newUserProfile: UserProfile = {
+              uid: firebaseUser.uid,
+              email: firebaseUser.email || '',
+              role: 'editor', // Por defecto editor
+              displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Usuario',
+              createdAt: new Date(),
+            };
+
+            try {
+              await setDoc(userRef, {
+                ...newUserProfile,
+                createdAt: serverTimestamp(),
+              });
+              setUserProfile(newUserProfile);
+            } catch (createError) {
+              console.error("Error creando perfil de usuario:", createError);
+              setUserProfile(null);
+            }
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);

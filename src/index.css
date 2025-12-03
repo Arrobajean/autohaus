@@ -159,6 +159,18 @@
     background-color: #F5F4F2 !important;
   }
 
+  /* Admin panel dark theme override */
+  body.admin-panel,
+  body.admin-panel #root {
+    background-color: #0a0a0a !important;
+  }
+
+  /* Override main background for admin panel */
+  body.admin-panel main,
+  body.admin-panel [data-admin-layout] main {
+    background-color: #0a0a0a !important;
+  }
+
   .min-h-screen {
     background-color: #F5F4F2 !important;
   }
@@ -166,6 +178,13 @@
   /* Forzar el color de fondo Cararra solo en main y divs con "section" en la clase, pero NO en elementos section */
   main {
     background-color: #F5F4F2 !important;
+  }
+
+  /* Override main background for admin panel - must be after the general main rule */
+  body.admin-panel main,
+  body.admin-panel [data-admin-layout] main,
+  body.admin-panel main[data-admin-main] {
+    background-color: #0a0a0a !important;
   }
   
   /* Solo aplicar a divs con "section" en el nombre de clase, no a elementos <section> */

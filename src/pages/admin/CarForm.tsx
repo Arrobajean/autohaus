@@ -19,6 +19,27 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Loader2, X, Upload, ArrowUp, ArrowDown, Star } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import {
+  FileUpload,
+  FileUploadDropzone,
+  FileUploadItem,
+  FileUploadItemDelete,
+  FileUploadItemMetadata,
+  FileUploadItemPreview,
+  FileUploadList,
+  FileUploadTrigger,
+} from '@/components/ui/file-upload';
 
 const CarForm = () => {
   const { id } = useParams();
@@ -30,6 +51,8 @@ const CarForm = () => {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [deleteImageDialogOpen, setDeleteImageDialogOpen] = useState(false);
+  const [imageToDeleteIndex, setImageToDeleteIndex] = useState<number | null>(null);
   
   const [formData, setFormData] = useState<Partial<Car>>({
     make: '',
@@ -113,19 +136,79 @@ const CarForm = () => {
     }
   }, [id]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      setImages(files);
+  const handleImageChange = async (allFiles: File[]) => {
+    if (!storage) {
+      toast.error("Firebase Storage no está configurado.");
+      return;
+    }
 
-      // Crear URLs temporales para previsualización
-      const previews = files.map((file) => URL.createObjectURL(file));
-      setImagePreviews(previews);
+    // Identificar archivos nuevos (que no están en el estado actual)
+    const existingFilesSet = new Set(
+      images.map(f => `${f.name}-${f.size}-${f.lastModified}`)
+    );
+    const newFiles = allFiles.filter(
+      file => !existingFilesSet.has(`${file.name}-${file.size}-${file.lastModified}`)
+    );
+
+    // Si hay archivos nuevos, subirlos automáticamente
+    if (newFiles.length > 0) {
+      setUploading(true);
+      try {
+        const uploadedUrls: string[] = [];
+        
+        // Subir cada archivo nuevo
+        for (const file of newFiles) {
+          const storageRef = ref(storage, `cars/${Date.now()}_${file.name}`);
+          await uploadBytes(storageRef, file);
+          const url = await getDownloadURL(storageRef);
+          uploadedUrls.push(url);
+        }
+
+        // Agregar las URLs subidas al estado de imageUrls
+        setImageUrls(prev => [...prev, ...uploadedUrls]);
+        
+        // Limpiar las previews temporales de los archivos subidos
+        newFiles.forEach(file => {
+          const previewIndex = imagePreviews.findIndex((_, idx) => {
+            const oldFile = images[idx];
+            return oldFile && oldFile.name === file.name && oldFile.size === file.size;
+          });
+          if (previewIndex >= 0) {
+            URL.revokeObjectURL(imagePreviews[previewIndex]);
+          }
+        });
+
+        // Limpiar el estado de imágenes para que el componente FileUpload se vacíe
+        // Las imágenes ya están subidas y en imageUrls
+        setImages([]);
+        setImagePreviews([]);
+        
+        toast.success(`${newFiles.length} imagen${newFiles.length > 1 ? 'es' : ''} subida${newFiles.length > 1 ? 's' : ''} correctamente`);
+      } catch (error: any) {
+        console.error("Error subiendo imágenes:", error);
+        toast.error(`Error al subir imágenes: ${error.message}`);
+        // Si hay error, mantener los archivos en el estado para que el usuario pueda intentar de nuevo
+        setImages(allFiles);
+      } finally {
+        setUploading(false);
+      }
+    } else {
+      // Si no hay archivos nuevos pero se eliminaron algunos, actualizar el estado
+      setImages(allFiles);
     }
   };
 
-  const removeImage = (index: number) => {
-    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveImageClick = (index: number) => {
+    setImageToDeleteIndex(index);
+    setDeleteImageDialogOpen(true);
+  };
+
+  const removeImage = () => {
+    if (imageToDeleteIndex === null) return;
+    setImageUrls(prev => prev.filter((_, i) => i !== imageToDeleteIndex));
+    setDeleteImageDialogOpen(false);
+    setImageToDeleteIndex(null);
+    toast.success('Imagen eliminada');
   };
 
   const moveImageUp = (index: number) => {
@@ -178,16 +261,6 @@ const CarForm = () => {
     setDraggedIndex(null);
   };
 
-  const uploadImages = async () => {
-    const urls: string[] = [];
-    for (const image of images) {
-      const storageRef = ref(storage, `cars/${Date.now()}_${image.name}`);
-      await uploadBytes(storageRef, image);
-      const url = await getDownloadURL(storageRef);
-      urls.push(url);
-    }
-    return urls;
-  };
 
   const handlePreviewPage = () => {
     if (!formData.make || !formData.model) {
@@ -281,18 +354,10 @@ const CarForm = () => {
         }
       }
 
-      let newImageUrls = [...imageUrls];
-      
-      if (images.length > 0) {
-        setUploading(true);
-        const uploadedUrls = await uploadImages();
-        newImageUrls = [...newImageUrls, ...uploadedUrls];
-        setUploading(false);
-      }
-
+      // Las imágenes ya están subidas automáticamente, solo usar imageUrls
       const carData = {
         ...formData,
-        images: newImageUrls,
+        images: imageUrls,
         updatedAt: serverTimestamp(),
       };
 
@@ -333,134 +398,151 @@ const CarForm = () => {
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto pb-6 sm:pb-10">
-      <Card>
-        <CardHeader className="px-4 sm:px-6">
-          <CardTitle className="text-lg sm:text-xl">{id ? 'Editar Vehículo' : 'Añadir Nuevo Vehículo'}</CardTitle>
+    <div className="w-full h-full min-w-0">
+      <Card className="h-full flex flex-col min-w-0 bg-[#1a1a1a] border-[#2a2a2a]">
+        <CardHeader className="px-6 py-3 border-b border-[#2a2a2a] flex-shrink-0">
+          <CardTitle className="text-lg text-white">{id ? 'Editar Vehículo' : 'Añadir Nuevo Vehículo'}</CardTitle>
         </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <div className="space-y-1 sm:space-y-2">
-                <label className="text-xs sm:text-sm font-medium">Marca</label>
-                <Input
-                  value={formData.make}
-                  onChange={(e) => setFormData({ ...formData, make: e.target.value })}
-                  required
+        <CardContent className="px-6 py-4 flex-1 overflow-y-auto overflow-x-auto min-w-0">
+          <form onSubmit={handleSubmit} className="space-y-4 min-w-fit">
+            {/* Información Básica */}
+            <div>
+              <h3 className="text-sm font-semibold mb-2 text-white">Información Básica</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Marca</label>
+                  <Input
+                    value={formData.make}
+                    onChange={(e) => setFormData({ ...formData, make: e.target.value })}
+                    required
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Modelo</label>
+                  <Input
+                    value={formData.model}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    required
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Año</label>
+                  <Input
+                    type="number"
+                    value={formData.year}
+                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
+                    required
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Precio (€)</label>
+                  <Input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                    required
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Km</label>
+                  <Input
+                    type="number"
+                    value={formData.mileage}
+                    onChange={(e) => setFormData({ ...formData, mileage: parseInt(e.target.value) })}
+                    required
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Combustible</label>
+                  <Select
+                    value={formData.fuelType}
+                    onValueChange={(value) => setFormData({ ...formData, fuelType: value })}
+                  >
+                    <SelectTrigger className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                      <SelectItem value="Gasoline" className="text-white hover:bg-[#2a2a2a]">Gasolina</SelectItem>
+                      <SelectItem value="Diesel" className="text-white hover:bg-[#2a2a2a]">Diésel</SelectItem>
+                      <SelectItem value="Electric" className="text-white hover:bg-[#2a2a2a]">Eléctrico</SelectItem>
+                      <SelectItem value="Hybrid" className="text-white hover:bg-[#2a2a2a]">Híbrido</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Transmisión</label>
+                  <Input
+                    value={formData.transmission}
+                    onChange={(e) => setFormData({ ...formData, transmission: e.target.value })}
+                    placeholder="7-Speed PDK"
+                    required
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Estado</label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(value: any) => setFormData({ ...formData, status: value })}
+                  >
+                    <SelectTrigger className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                      <SelectItem value="available" className="text-white hover:bg-[#2a2a2a]">Disponible</SelectItem>
+                      <SelectItem value="reserved" className="text-white hover:bg-[#2a2a2a]">Reservado</SelectItem>
+                      <SelectItem value="sold" className="text-white hover:bg-[#2a2a2a]">Vendido</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Categoría</label>
+                  <Select
+                    value={formData.category || 'luxury'}
+                    onValueChange={(value: any) => setFormData({ ...formData, category: value })}
+                  >
+                    <SelectTrigger className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                      <SelectValue placeholder="Seleccionar" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                      <SelectItem value="luxury" className="text-white hover:bg-[#2a2a2a]">Lujo</SelectItem>
+                      <SelectItem value="premium" className="text-white hover:bg-[#2a2a2a]">Premium</SelectItem>
+                      <SelectItem value="suv" className="text-white hover:bg-[#2a2a2a]">SUV</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Descripción y Destacado */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              <div className="lg:col-span-2">
+                <h3 className="text-sm font-semibold mb-2 text-white">Descripción</h3>
+                <Textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  placeholder="Descripción detallada del vehículo..."
+                  className="text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
                 />
               </div>
-              <div className="space-y-1 sm:space-y-2">
-                <label className="text-xs sm:text-sm font-medium">Modelo</label>
-                <Input
-                  value={formData.model}
-                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                  required
-                  className="text-xs sm:text-sm"
-                />
-              </div>
-              <div className="space-y-1 sm:space-y-2">
-                <label className="text-xs sm:text-sm font-medium">Año</label>
-                <Input
-                  type="number"
-                  value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) })}
-                  required
-                  className="text-xs sm:text-sm"
-                />
-              </div>
-              <div className="space-y-1 sm:space-y-2">
-                <label className="text-xs sm:text-sm font-medium">Precio (€)</label>
-                <Input
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-                  required
-                  className="text-xs sm:text-sm"
-                />
-              </div>
-              <div className="space-y-1 sm:space-y-2">
-                <label className="text-xs sm:text-sm font-medium">Kilometraje (km)</label>
-                <Input
-                  type="number"
-                  value={formData.mileage}
-                  onChange={(e) => setFormData({ ...formData, mileage: parseInt(e.target.value) })}
-                  required
-                  className="text-xs sm:text-sm"
-                />
-              </div>
-              <div className="space-y-1 sm:space-y-2">
-                <label className="text-xs sm:text-sm font-medium">Tipo de Combustible</label>
-                <Select
-                  value={formData.fuelType}
-                  onValueChange={(value) => setFormData({ ...formData, fuelType: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar tipo de combustible" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Gasoline">Gasolina</SelectItem>
-                    <SelectItem value="Diesel">Diésel</SelectItem>
-                    <SelectItem value="Electric">Eléctrico</SelectItem>
-                    <SelectItem value="Hybrid">Híbrido</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1 sm:space-y-2">
-                <label className="text-xs sm:text-sm font-medium">Transmisión</label>
-                <Input
-                  value={formData.transmission}
-                  onChange={(e) => setFormData({ ...formData, transmission: e.target.value })}
-                  placeholder="Ej: 7-Speed PDK, 6-Speed Manual, Automática"
-                  required
-                  className="text-xs sm:text-sm"
-                />
-              </div>
-              <div className="space-y-1 sm:space-y-2">
-                <label className="text-xs sm:text-sm font-medium">Estado</label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value: any) => setFormData({ ...formData, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="available">Disponible</SelectItem>
-                    <SelectItem value="reserved">Reservado</SelectItem>
-                    <SelectItem value="sold">Vendido</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1 sm:space-y-2">
-                <label className="text-xs sm:text-sm font-medium">Categoría</label>
-                <Select
-                  value={formData.category || 'luxury'}
-                  onValueChange={(value: any) => setFormData({ ...formData, category: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="luxury">Lujo</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="suv">SUV</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1 sm:space-y-2 md:col-span-2">
-                <div className="flex items-center justify-between rounded-lg border p-3 sm:p-4">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="featured" className="text-xs sm:text-sm font-medium">
+              <div>
+                <h3 className="text-sm font-semibold mb-2 text-white">Destacado</h3>
+                <div className="flex items-center gap-3 rounded-lg border border-[#2a2a2a] p-3 bg-[#0a0a0a]">
+                  <div className="flex-1 min-w-0">
+                    <Label htmlFor="featured" className="text-xs font-medium cursor-pointer text-gray-200">
                       Coche Destacado
                     </Label>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">
-                      Aparecerá en la sección de coches destacados del landing page
-                      {!formData.featured && featuredCount >= 6 && (
-                        <span className="block mt-1 text-orange-600 font-medium">
-                          (Máximo 6 coches destacados - {featuredCount}/6)
-                        </span>
-                      )}
-                    </p>
+                    {!formData.featured && featuredCount >= 6 && (
+                      <p className="text-[10px] text-orange-400 mt-0.5">
+                        Máx. 6 ({featuredCount}/6)
+                      </p>
+                    )}
                   </div>
                   <Switch
                     id="featured"
@@ -481,131 +563,163 @@ const CarForm = () => {
             </div>
 
             {/* Especificaciones Técnicas */}
-            <div className="border-t pt-4 sm:pt-6">
-              <h3 className="text-base sm:text-lg font-semibold mb-2">Especificaciones Clave</h3>
-              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
-                Una descripción detallada de las especificaciones técnicas clave y los principales aspectos destacados de rendimiento del vehículo.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                <div className="space-y-1 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-medium">Velocidad Máxima (km/h)</label>
+            <div>
+              <h3 className="text-sm font-semibold mb-2 text-white">Especificaciones Técnicas</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">V. Máx. (km/h)</label>
                   <Input
                     type="number"
                     value={formData.topSpeed || ''}
                     onChange={(e) => setFormData({ ...formData, topSpeed: e.target.value ? parseInt(e.target.value) : undefined })}
-                    placeholder="Ej: 320"
+                    placeholder="320"
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
                   />
                 </div>
-                <div className="space-y-1 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-medium">Potencia (hp)</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Potencia (hp)</label>
                   <Input
                     type="number"
                     value={formData.power || ''}
                     onChange={(e) => setFormData({ ...formData, power: e.target.value ? parseInt(e.target.value) : undefined })}
-                    placeholder="Ej: 650"
-                    className="text-xs sm:text-sm"
+                    placeholder="650"
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
                   />
                 </div>
-                <div className="space-y-1 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-medium">Aceleración 0-100 km/h (s)</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">0-100 km/h (s)</label>
                   <Input
                     type="number"
                     step="0.1"
                     value={formData.acceleration || ''}
                     onChange={(e) => setFormData({ ...formData, acceleration: e.target.value ? parseFloat(e.target.value) : undefined })}
-                    placeholder="Ej: 3.2"
-                    className="text-xs sm:text-sm"
+                    placeholder="3.2"
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
                   />
                 </div>
-                <div className="space-y-1 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-medium">Asientos</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Asientos</label>
                   <Input
                     type="number"
                     value={formData.seats || ''}
                     onChange={(e) => setFormData({ ...formData, seats: e.target.value ? parseInt(e.target.value) : undefined })}
-                    placeholder="Ej: 2"
-                    className="text-xs sm:text-sm"
+                    placeholder="2"
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
                   />
                 </div>
-                <div className="space-y-1 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-medium">Exterior</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Color Ext.</label>
                   <Input
                     value={formData.exterior || ''}
                     onChange={(e) => setFormData({ ...formData, exterior: e.target.value })}
-                    placeholder="Ej: Arctic Grey"
-                    className="text-xs sm:text-sm"
+                    placeholder="Arctic Grey"
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
                   />
                 </div>
-                <div className="space-y-1 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-medium">Interior</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Color Int.</label>
                   <Input
                     value={formData.interior || ''}
                     onChange={(e) => setFormData({ ...formData, interior: e.target.value })}
-                    placeholder="Ej: Black Alcantara"
-                    className="text-xs sm:text-sm"
+                    placeholder="Black Alcantara"
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
                   />
                 </div>
-                <div className="space-y-1 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-medium">Tracción</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Tracción</label>
                   <Select
                     value={formData.drivetrain || ''}
                     onValueChange={(value) => setFormData({ ...formData, drivetrain: value })}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleccionar tracción" />
+                    <SelectTrigger className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white">
+                      <SelectValue placeholder="Seleccionar" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="RWD">RWD (Tracción trasera)</SelectItem>
-                      <SelectItem value="FWD">FWD (Tracción delantera)</SelectItem>
-                      <SelectItem value="AWD">AWD (Tracción total)</SelectItem>
+                    <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
+                      <SelectItem value="RWD" className="text-white hover:bg-[#2a2a2a]">RWD</SelectItem>
+                      <SelectItem value="FWD" className="text-white hover:bg-[#2a2a2a]">FWD</SelectItem>
+                      <SelectItem value="AWD" className="text-white hover:bg-[#2a2a2a]">AWD</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1 sm:space-y-2">
-                  <label className="text-xs sm:text-sm font-medium">Motor</label>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-gray-200">Motor</label>
                   <Input
                     value={formData.engine || ''}
                     onChange={(e) => setFormData({ ...formData, engine: e.target.value })}
-                    placeholder="Ej: 4.0 L Twin-Turbo V8"
-                    className="text-xs sm:text-sm"
+                    placeholder="4.0L Twin-Turbo V8"
+                    className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-1 sm:space-y-2">
-              <label className="text-xs sm:text-sm font-medium">Descripción</label>
-              <Textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={4}
-                className="text-xs sm:text-sm"
-              />
-            </div>
-
-            <div className="space-y-2 border-t pt-4 sm:pt-6">
-              <label className="text-xs sm:text-sm font-medium">Imágenes</label>
-              <p className="text-[10px] sm:text-xs text-gray-500 mb-2">
-                La primera imagen será la imagen principal (hero). Puedes reordenar usando los botones.
+            {/* Imágenes */}
+            <div>
+              <h3 className="text-sm font-semibold mb-2 text-white">Imágenes</h3>
+              <p className="text-xs text-gray-400 mb-3">
+                Primera imagen = principal. Reordenar arrastrando. Se suben automáticamente.
               </p>
-              <div className="flex items-center gap-4">
-                <Input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="cursor-pointer"
-                />
-              </div>
+              {uploading && (
+                <div className="mb-4 flex items-center gap-2 text-sm text-blue-400">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Subiendo imágenes...</span>
+                </div>
+              )}
+              <FileUpload
+                value={images}
+                onValueChange={handleImageChange}
+                multiple
+                accept="image/*"
+                className="w-full"
+                disabled={uploading}
+              >
+                <FileUploadDropzone>
+                  <div className="flex flex-col items-center gap-1 text-center py-8">
+                    <div className="flex items-center justify-center rounded-full border p-2.5">
+                      {uploading ? (
+                        <Loader2 className="size-6 text-muted-foreground animate-spin" />
+                      ) : (
+                        <Upload className="size-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <p className="font-medium text-sm">
+                      {uploading ? 'Subiendo imágenes...' : 'Arrastra y suelta imágenes aquí'}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {uploading ? 'Por favor espera...' : 'O haz clic para buscar archivos. Se subirán automáticamente.'}
+                    </p>
+                  </div>
+                  <FileUploadTrigger asChild>
+                    <Button variant="outline" size="sm" className="mt-2 w-fit mx-auto border-[#2a2a2a] text-gray-200 hover:bg-[#2a2a2a]" disabled={uploading}>
+                      {uploading ? 'Subiendo...' : 'Buscar archivos'}
+                    </Button>
+                  </FileUploadTrigger>
+                </FileUploadDropzone>
+                {images.length > 0 && (
+                  <FileUploadList className="mt-4">
+                    {images.map((file, index) => (
+                      <FileUploadItem key={`${file.name}-${file.size}-${index}`} value={file}>
+                        <FileUploadItemPreview />
+                        <FileUploadItemMetadata />
+                        <FileUploadItemDelete asChild>
+                          <Button variant="ghost" size="icon" className="size-7" disabled={uploading}>
+                            <X />
+                          </Button>
+                        </FileUploadItemDelete>
+                      </FileUploadItem>
+                    ))}
+                  </FileUploadList>
+                )}
+              </FileUpload>
 
-              {/* Imágenes existentes (guardadas en Firebase) */}
+              {/* Imágenes existentes */}
               {imageUrls.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-3 sm:mt-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mt-4">
                   {imageUrls.map((url, index) => (
                     <div
                       key={index}
-                      className={`relative group border rounded-lg p-2 bg-gray-50 ${
-                        draggedIndex === index ? "opacity-75 ring-2 ring-black/40" : ""
+                      className={`relative group border border-[#2a2a2a] rounded-lg p-2 bg-[#0a0a0a] ${
+                        draggedIndex === index ? "opacity-75 ring-2 ring-white/40" : ""
                       }`}
                       draggable
                       onDragStart={() => handleImageDragStart(index)}
@@ -617,33 +731,53 @@ const CarForm = () => {
                         <img
                           src={url}
                           alt={`Imagen ${index + 1}`}
-                          className="w-full h-32 sm:h-40 object-cover rounded-md"
+                          className="w-full h-40 object-cover rounded-md"
                         />
                         {index === 0 && (
-                          <div className="absolute top-1 sm:top-2 left-1 sm:left-2 bg-yellow-500 text-white px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-semibold flex items-center gap-1">
-                            <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" />
-                            <span className="hidden sm:inline">Principal</span>
+                          <div className="absolute top-2 left-2 bg-yellow-500 text-white px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-white" />
+                            Principal
                           </div>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-1 sm:top-2 right-1 sm:right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-3 h-3 sm:w-4 sm:h-4" />
-                        </button>
+                        <AlertDialog open={deleteImageDialogOpen && imageToDeleteIndex === index} onOpenChange={setDeleteImageDialogOpen}>
+                          <AlertDialogTrigger asChild>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveImageClick(index)}
+                              className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-white">¿Eliminar imagen?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-300">
+                                Esta acción eliminará la imagen permanentemente. ¿Estás seguro de que deseas continuar?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setImageToDeleteIndex(null)} className="bg-[#2a2a2a] border-[#2a2a2a] text-gray-200 hover:bg-[#3a3a3a]">Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={removeImage}
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
-                      <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mt-2">
+                      <div className="flex justify-center gap-1 mt-2">
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           onClick={() => setHeroImage(index)}
                           disabled={index === 0}
-                          className="text-[10px] sm:text-xs h-7 sm:h-8 px-1.5 sm:px-2"
+                          className="text-xs h-8 px-2"
                         >
-                          <Star className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
-                          <span className="hidden sm:inline">Principal</span>
+                          <Star className="w-3 h-3" />
                         </Button>
                         <Button
                           type="button"
@@ -651,7 +785,7 @@ const CarForm = () => {
                           size="sm"
                           onClick={() => moveImageUp(index)}
                           disabled={index === 0}
-                          className="h-7 sm:h-8 w-7 sm:w-8 p-0"
+                          className="h-8 w-8 p-0"
                         >
                           <ArrowUp className="w-3 h-3" />
                         </Button>
@@ -661,7 +795,7 @@ const CarForm = () => {
                           size="sm"
                           onClick={() => moveImageDown(index)}
                           disabled={index === imageUrls.length - 1}
-                          className="h-7 sm:h-8 w-7 sm:w-8 p-0"
+                          className="h-8 w-8 p-0"
                         >
                           <ArrowDown className="w-3 h-3" />
                         </Button>
@@ -670,7 +804,7 @@ const CarForm = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => window.open(url, "_blank")}
-                          className="h-7 sm:h-8 px-2 sm:px-3 text-[10px] sm:text-xs"
+                          className="h-8 px-2 text-xs"
                         >
                           Ver
                         </Button>
@@ -680,28 +814,28 @@ const CarForm = () => {
                 </div>
               )}
 
-              {/* Previsualización de nuevas imágenes seleccionadas (local) */}
+              {/* Previsualización de nuevas imágenes */}
               {imagePreviews.length > 0 && (
-                <div className="mt-4 sm:mt-6 space-y-2">
-                  <p className="text-[10px] sm:text-xs font-medium text-gray-600">
-                    Nuevas imágenes seleccionadas (aún no guardadas):
+                <div className="mt-6 space-y-3">
+                  <p className="text-sm font-medium text-gray-300">
+                    Nuevas imágenes (pendientes de guardar):
                   </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
                     {imagePreviews.map((url, index) => (
-                      <div key={index} className="space-y-1">
+                      <div key={index} className="space-y-2">
                         <img
                           src={url}
-                          alt={`Nueva imagen ${index + 1}`}
-                          className="w-full h-20 sm:h-24 object-cover rounded-md border"
+                          alt={`Nueva ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-md border"
                         />
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="w-full text-[10px] sm:text-xs h-7 sm:h-8"
+                          className="w-full text-xs h-7"
                           onClick={() => window.open(url, "_blank")}
                         >
-                          Vista previa
+                          Ver
                         </Button>
                       </div>
                     ))}
@@ -710,33 +844,40 @@ const CarForm = () => {
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 md:gap-4">
+            {/* Botones de acción */}
+            <div className="flex items-center justify-between pt-4 border-t border-[#2a2a2a]">
               <Button
                 type="button"
                 variant="outline"
-                onClick={handlePreviewPage}
-                className="w-full sm:w-auto text-xs sm:text-sm"
                 size="sm"
+                onClick={handlePreviewPage}
+                className="border-[#2a2a2a] text-gray-200 hover:bg-[#2a2a2a]"
               >
-                <span className="hidden sm:inline">Vista previa ficha</span>
-                <span className="sm:hidden">Vista previa</span>
+                Vista Previa
               </Button>
-              <div className="flex gap-2 sm:gap-3 md:gap-4 justify-end w-full sm:w-auto">
-                <Button type="button" variant="outline" onClick={() => navigate('/admin/cars')} className="w-full sm:w-auto text-xs sm:text-sm" size="sm">
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/admin/cars')}
+                  className="border-[#2a2a2a] text-gray-200 hover:bg-[#2a2a2a]"
+                >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={loading || uploading} className="w-full sm:w-auto text-xs sm:text-sm" size="sm">
+                <Button 
+                  type="submit" 
+                  size="sm"
+                  disabled={loading || uploading}
+                  className="min-w-[120px]"
+                >
                   {loading || uploading ? (
                     <>
-                      <Loader2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 animate-spin" />
-                      <span className="hidden sm:inline">{uploading ? 'Subiendo Imágenes...' : 'Guardando...'}</span>
-                      <span className="sm:hidden">{uploading ? 'Subiendo...' : 'Guardando...'}</span>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      {uploading ? 'Subiendo...' : 'Guardando...'}
                     </>
                   ) : (
-                    <>
-                      <span className="hidden sm:inline">Guardar Vehículo</span>
-                      <span className="sm:hidden">Guardar</span>
-                    </>
+                    'Guardar Vehículo'
                   )}
                 </Button>
               </div>
