@@ -605,8 +605,8 @@ function FileUploadRoot(props: FileUploadRootProps) {
           className={cn("relative flex flex-col gap-2", className)}
         >
           {children}
-          <input
-            type="file"
+        <input
+          type="file"
             id={inputId}
             aria-labelledby={labelId}
             aria-describedby={dropzoneId}
@@ -981,7 +981,7 @@ function FileUploadItem(props: FileUploadItemProps) {
         data-slot="file-upload-item"
         dir={context.dir}
         {...itemProps}
-        className={cn(
+                  className={cn(
           "relative flex items-center gap-2.5 rounded-md border p-3",
           className,
         )}
@@ -1108,7 +1108,7 @@ function FileUploadItemPreview(props: FileUploadItemPreviewProps) {
       aria-labelledby={itemContext.nameId}
       data-slot="file-upload-preview"
       {...previewProps}
-      className={cn(
+                className={cn(
         "relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded border bg-accent/50 [&>svg]:size-10",
         className,
       )}
@@ -1213,7 +1213,7 @@ function FileUploadItemProgress(props: FileUploadItemProgressProps) {
       const strokeDashoffset =
         circumference - (itemContext.fileState.progress / 100) * circumference;
 
-      return (
+  return (
         <ItemProgressPrimitive
           role="progressbar"
           aria-valuemin={0}
