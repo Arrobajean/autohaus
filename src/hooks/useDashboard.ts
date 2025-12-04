@@ -113,7 +113,7 @@ export const useDashboard = () => {
       // Validar límite antes de activar
       if (!currentFeatured && !canAddFeaturedCar(stats.featuredCars.length)) {
         toast.error(
-          "Ya hay 6 coches destacados. Desactiva uno primero para añadir otro.",
+          "Ya hay 12 coches destacados. Desactiva uno primero para añadir otro.",
           {
             duration: 4000,
           }

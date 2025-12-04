@@ -41,6 +41,7 @@ const Index = () => {
         <meta property="og:site_name" content={seoSettings.ogSiteName} />
         <meta property="twitter:card" content={seoSettings.twitterCard} />
         <link rel="canonical" href={seoSettings.canonicalUrl} />
+        {seoSettings.faviconUrl && <link rel="icon" href={seoSettings.faviconUrl} />}
       </Helmet>
       <div
         className="min-h-screen bg-white"

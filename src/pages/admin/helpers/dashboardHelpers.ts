@@ -7,7 +7,7 @@ import {
 import { db } from "@/lib/firebase";
 import { Car } from "@/types";
 
-const MAX_FEATURED_CARS = 6;
+const MAX_FEATURED_CARS = 12;
 
 /**
  * Obtiene todas las estadísticas del dashboard

@@ -2,7 +2,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { toast } from "sonner";
 
-const MAX_FEATURED_CARS = 6;
+const MAX_FEATURED_CARS = 12;
 
 export const validateFeaturedLimit = async (
   carId: string | undefined,
@@ -32,7 +32,7 @@ export const validateFeaturedLimit = async (
 
       if (featuredCount >= MAX_FEATURED_CARS) {
         toast.error(
-          "Ya hay 6 coches destacados. Desactiva uno primero para añadir este.",
+          "Ya hay 12 coches destacados. Desactiva uno primero para añadir este.",
           { duration: 4000 }
         );
         return false;
@@ -51,7 +51,7 @@ export const validateFeaturedLimit = async (
 
       if (featuredCount >= MAX_FEATURED_CARS) {
         toast.error(
-          "Ya hay 6 coches destacados. Desactiva uno primero para añadir este.",
+          "Ya hay 12 coches destacados. Desactiva uno primero para añadir este.",
           { duration: 4000 }
         );
         return false;

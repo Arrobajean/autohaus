@@ -167,6 +167,20 @@ const Settings = () => {
                       placeholder="https://autohaus.es/"
                     />
                   </div>
+
+                  <div className="space-y-2 lg:col-span-2">
+                    <Label htmlFor="faviconUrl" className="text-white text-xs font-medium">
+                      URL del Favicon
+                    </Label>
+                    <Input
+                      id="faviconUrl"
+                      value={seoFormData.faviconUrl || ''}
+                      onChange={(e) => setSeoFormData({ ...seoFormData, faviconUrl: e.target.value })}
+                      className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                      placeholder="/favicon/favicon.ico"
+                    />
+                    <p className="text-[10px] text-gray-400">Ruta relativa o URL absoluta del favicon</p>
+                  </div>
                 </div>
 
                 <div className="flex justify-end pt-4 border-t border-[#2a2a2a]">
@@ -265,11 +279,11 @@ const Settings = () => {
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                     {[
                       { id: 'trustedBrands', label: 'Marcas' },
-                      { id: 'featuredVehicles', label: 'Destacados' },
-                      { id: 'whyChoose', label: 'Por Qué' },
+                      { id: 'featuredVehicles', label: 'Coches destacados' },
+                      { id: 'whyChoose', label: 'Por qué escogernos' },
                       { id: 'stats', label: 'Estadísticas' },
                       { id: 'reviews', label: 'Reseñas' },
-                      { id: 'faq', label: 'FAQ' },
+                      { id: 'faq', label: 'Preguntas Frecuentes' },
                     ].map((section) => (
                       <div key={section.id} className="flex flex-col items-center justify-between p-3 rounded-xl border border-[#2a2a2a] bg-[#0a0a0a] gap-3 hover:border-gray-700 transition-colors">
                         <Label htmlFor={section.id} className="text-gray-300 text-xs font-medium cursor-pointer text-center">

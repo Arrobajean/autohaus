@@ -12,6 +12,7 @@ import { CAR_BRANDS } from "@/data/carBrands";
 import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { getMaxFeaturedCars } from "@/pages/admin/helpers/dashboardHelpers";
 
 interface BasicInfoFieldsProps {
   formData: Partial<Car>;
@@ -237,9 +238,10 @@ export const BasicInfoFields = ({
               id="featured"
               checked={formData.featured || false}
               onCheckedChange={(checked) => {
-                if (checked && featuredCount >= 6 && !originalFeatured) {
+                const maxFeatured = getMaxFeaturedCars();
+                if (checked && featuredCount >= maxFeatured && !originalFeatured) {
                   toast.error(
-                    "Ya hay 6 coches destacados. Desactiva uno primero para añadir este.",
+                    `Ya hay ${maxFeatured} coches destacados. Desactiva uno primero para añadir este.`,
                     { duration: 4000 }
                   );
                   return;
@@ -254,9 +256,9 @@ export const BasicInfoFields = ({
               >
                 Destacado
               </Label>
-              {!formData.featured && featuredCount >= 6 && (
+              {!formData.featured && featuredCount >= getMaxFeaturedCars() && (
                 <span className="text-[9px] text-orange-400 leading-none">
-                  Máx. 6
+                  Máx. {getMaxFeaturedCars()}
                 </span>
               )}
             </div>

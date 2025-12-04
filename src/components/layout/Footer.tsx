@@ -59,7 +59,7 @@ const Footer = memo<FooterProps>(({ showCredit = true }) => {
                 whiteSpace: 'nowrap',
               }}
             >
-              AutoHaus<sup style={{ fontSize: '0.6em', verticalAlign: '0.2em', marginLeft: '0.05em' }}>®</sup>
+              AutoHaus
             </span>
           </Link>
         </div>

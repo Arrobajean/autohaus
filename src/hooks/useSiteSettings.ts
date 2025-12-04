@@ -12,6 +12,7 @@ const DEFAULT_SEO: SEOSettings = {
   ogSiteName: 'AutoHaus',
   twitterCard: 'summary_large_image',
   canonicalUrl: 'https://autohaus.es/',
+  faviconUrl: '/favicon/favicon.ico',
 };
 
 const DEFAULT_HOMEPAGE: HomepageSettings = {

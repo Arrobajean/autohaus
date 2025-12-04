@@ -45,6 +45,7 @@ export interface SEOSettings {
   ogSiteName: string;
   twitterCard: string;
   canonicalUrl: string;
+  faviconUrl?: string;
 }
 
 export interface HomepageSectionsEnabled {

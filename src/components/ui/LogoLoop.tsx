@@ -141,17 +141,20 @@ const useAnimationLoop = (
       window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (seqWidth > 0) {
-      offsetRef.current =
-        ((offsetRef.current % seqWidth) + seqWidth) % seqWidth;
-      track.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`;
-    }
-
     if (prefersReduced) {
       track.style.transform = "translate3d(0, 0, 0)";
+      track.style.WebkitTransform = "translate3d(0, 0, 0)";
       return () => {
         lastTimestampRef.current = null;
       };
+    }
+
+    if (seqWidth > 0) {
+      offsetRef.current =
+        ((offsetRef.current % seqWidth) + seqWidth) % seqWidth;
+      const translateX = -offsetRef.current;
+      track.style.transform = `translate3d(${translateX}px, 0, 0)`;
+      track.style.WebkitTransform = `translate3d(${translateX}px, 0, 0)`;
     }
 
     const animate = (timestamp: number) => {
@@ -176,6 +179,7 @@ const useAnimationLoop = (
 
         const translateX = -offsetRef.current;
         track.style.transform = `translate3d(${translateX}px, 0, 0)`;
+        track.style.WebkitTransform = `translate3d(${translateX}px, 0, 0)`;
       }
 
       rafRef.current = requestAnimationFrame(animate);
@@ -248,6 +252,14 @@ export const LogoLoop = React.memo<LogoLoopProps>(
     );
 
     useImageLoader(seqRef, updateDimensions, [logos, gap, logoHeight]);
+
+    // Force recalculation on mobile after a short delay to ensure dimensions are set
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        updateDimensions();
+      }, 100);
+      return () => clearTimeout(timer);
+    }, [updateDimensions]);
 
     useAnimationLoop(
       trackRef,
@@ -452,6 +464,11 @@ export const LogoLoop = React.memo<LogoLoopProps>(
             "motion-reduce:transform-none"
           )}
           ref={trackRef}
+          style={{
+            touchAction: "none",
+            WebkitTransform: "translate3d(0, 0, 0)",
+            transform: "translate3d(0, 0, 0)",
+          }}
         >
           {logoLists}
         </div>
