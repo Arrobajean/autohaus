@@ -22,17 +22,17 @@ export const CarImageGallery = ({
   return (
     <>
       {/* Main Image */}
-      <div className="rounded-2xl overflow-hidden shadow-lg h-[400px] w-full max-w-[380px] mx-auto md:h-[996px] md:max-w-full mb-6 md:mb-16">
+      <div className="rounded-2xl overflow-hidden shadow-lg w-full max-w-[380px] mx-auto md:max-w-full mb-6 md:mb-16 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
         <img
           src={car.images[selectedImageIndex]}
           alt={`${car.make} ${car.model} - Vista ${selectedImageIndex + 1}`}
-          className="w-full h-full object-cover transition-opacity duration-300"
+          className="w-full h-auto object-contain transition-opacity duration-300"
         />
       </div>
 
       {/* Image Gallery Thumbnails */}
       {car.images.length > 1 && (
-        <div className="flex gap-4 justify-center overflow-x-auto pb-2">
+        <div className="flex gap-4 justify-center overflow-x-auto pt-4 pb-2">
           {car.images.map((image, index) => (
             <button
               key={index}
@@ -47,7 +47,7 @@ export const CarImageGallery = ({
               <img
                 src={image}
                 alt={`${car.make} ${car.model} - Miniatura ${index + 1}`}
-                className="w-24 h-24 md:w-32 md:h-32 object-cover"
+                className="w-14 h-14 md:w-16 md:h-16 object-cover"
               />
             </button>
           ))}

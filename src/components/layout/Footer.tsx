@@ -30,17 +30,17 @@ const Footer = memo<FooterProps>(({ showCredit = true }) => {
   return (
     <footer
       id="contact"
-      className="bg-white py-20 px-4 sm:px-6"
+      className="bg-white pt-20 pb-10 px-4 sm:px-6"
       style={{ backgroundColor: "#F5F4F2" }}
       role="contentinfo"
       aria-label="Footer information"
     >
       <div className="max-w-7xl mx-auto">
         {/* Logo Section */}
-        <div className="flex justify-center mb-16 overflow-visible">
+        <div className="flex justify-center mb-16 overflow-hidden px-2">
           <Link 
             to="/" 
-            className="inline-block"
+            className="inline-block max-w-full"
             onClick={(e) => {
               // Si ya estamos en la página de inicio, hacer scroll al inicio
               if (window.location.pathname === '/') {
@@ -50,11 +50,13 @@ const Footer = memo<FooterProps>(({ showCredit = true }) => {
             }}
           >
             <span 
-              className="font-bold tracking-tight text-[80px] sm:text-[120px] md:text-[160px] lg:text-[200px] xl:text-[251.983px] whitespace-nowrap"
+              className="font-bold tracking-tight block"
               style={{
                 fontFamily: '"Inter Display", "Inter Display Placeholder", sans-serif',
                 color: '#E0E0E0',
                 lineHeight: '1',
+                fontSize: 'clamp(50px, 18vw, 251.983px)',
+                whiteSpace: 'nowrap',
               }}
             >
               AutoHaus<sup style={{ fontSize: '0.6em', verticalAlign: '0.2em', marginLeft: '0.05em' }}>®</sup>
