@@ -15,14 +15,14 @@ export const DescriptionAndFeatured = ({
   originalFeatured,
 }: DescriptionAndFeaturedProps) => {
   return (
-    <div>
-      <h3 className="text-sm font-semibold mb-1.5 text-white">Descripción</h3>
+    <div className="space-y-1">
+      <h3 className="text-sm font-semibold mb-3 text-white">Descripción</h3>
       <Textarea
         value={formData.description}
         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-        rows={2}
+        rows={4}
         placeholder="Descripción detallada del vehículo..."
-        className="text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400 min-h-[60px]"
+        className="text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400 h-40 md:h-[120px] resize-none"
       />
     </div>
   );

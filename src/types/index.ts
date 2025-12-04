@@ -12,6 +12,7 @@ export interface Car {
   category?: string;
   status: "available" | "sold" | "reserved";
   featured?: boolean; // Si el coche aparece en la sección de destacados del landing
+  showFinancedPrice?: boolean; // Si se muestra el precio financiado en la vista detallada
   createdAt: Date;
   updatedAt: Date;
   // Especificaciones técnicas
@@ -31,4 +32,36 @@ export interface UserProfile {
   role: "admin" | "editor";
   displayName: string;
   createdAt: Date;
+}
+
+export interface SEOSettings {
+  siteTitle: string;
+  siteDescription: string;
+  keywords: string;
+  ogImageUrl: string;
+  ogSiteName: string;
+  twitterCard: string;
+  canonicalUrl: string;
+}
+
+export interface HomepageSectionsEnabled {
+  trustedBrands: boolean;
+  featuredVehicles: boolean;
+  whyChoose: boolean;
+  stats: boolean;
+  reviews: boolean;
+  faq: boolean;
+}
+
+export interface HomepageSettings {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroImageUrl: string;
+  featuredCarsCount: number;
+  sectionsEnabled: HomepageSectionsEnabled;
+}
+
+export interface SiteSettings {
+  seo: SEOSettings;
+  homepage: HomepageSettings;
 }

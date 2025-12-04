@@ -37,31 +37,15 @@ const CarForm = () => {
   } = useCarForm();
 
   return (
-    <div
-      className="w-full min-w-0 flex flex-col"
-      style={{ height: "100%", maxHeight: "100%" }}
-    >
-      <Card
-        className="flex flex-col min-w-0 bg-[#1a1a1a] border-[#2a2a2a] h-full"
-        style={{ maxHeight: "100%", display: "flex", flexDirection: "column" }}
-      >
-        <CardHeader className="px-6 py-3 border-b border-[#2a2a2a] flex-shrink-0">
+    <div className="w-full min-w-0">
+      <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
+        <CardHeader className="px-6 py-4 border-b border-[#2a2a2a]">
           <CardTitle className="text-lg text-white">
             {id ? "Editar Vehículo" : "Añadir Nuevo Vehículo"}
           </CardTitle>
         </CardHeader>
-        <CardContent
-          className="px-6 py-3 flex-1 overflow-y-auto overflow-x-auto min-w-0"
-          style={{ minHeight: 0, maxHeight: "100%" }}
-          onWheel={(e) => {
-            const element = e.currentTarget;
-            if (element.scrollHeight > element.clientHeight) {
-              element.scrollTop += e.deltaY;
-              e.preventDefault();
-            }
-          }}
-        >
-          <form onSubmit={handleSubmit} className="space-y-3 min-w-fit">
+        <CardContent className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <BasicInfoFields
               formData={formData}
               setFormData={setFormData}

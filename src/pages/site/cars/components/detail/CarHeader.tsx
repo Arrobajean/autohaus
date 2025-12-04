@@ -37,10 +37,15 @@ export const CarHeader = ({ car }: CarHeaderProps) => {
         <p className="text-center">
           <span className="text-xl md:text-2xl font-normal text-black">
             {car.price.toLocaleString("es-ES")} €
-          </span>{" "}
-          <span className="font-normal text-gray-600 text-base md:text-lg">
-            (desde {monthlyPayment.toLocaleString("es-ES")} €/mes)
           </span>
+          {car.showFinancedPrice && (
+            <>
+              {" "}
+              <span className="font-normal text-gray-600 text-base md:text-lg">
+                (desde {monthlyPayment.toLocaleString("es-ES")} €/mes)
+              </span>
+            </>
+          )}
         </p>
       </div>
 

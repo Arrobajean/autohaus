@@ -16,10 +16,10 @@ interface TechnicalSpecsProps {
 export const TechnicalSpecs = ({ formData, setFormData }: TechnicalSpecsProps) => {
   return (
     <div>
-      <h3 className="text-sm font-semibold mb-1.5 text-white">Especificaciones Técnicas</h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
+      <h3 className="text-sm font-semibold mb-3 text-white">Especificaciones Técnicas</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-200">V. Máx. (km/h)</label>
+          <label className="block text-xs font-medium text-gray-200 mb-1">V. Máx.</label>
           <Input
             type="number"
             value={formData.topSpeed || ""}
@@ -34,7 +34,7 @@ export const TechnicalSpecs = ({ formData, setFormData }: TechnicalSpecsProps) =
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-200">Potencia (hp)</label>
+          <label className="block text-xs font-medium text-gray-200 mb-1">Potencia</label>
           <Input
             type="number"
             value={formData.power || ""}
@@ -49,7 +49,7 @@ export const TechnicalSpecs = ({ formData, setFormData }: TechnicalSpecsProps) =
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-200">0-100 km/h (s)</label>
+          <label className="block text-xs font-medium text-gray-200 mb-1">0-100</label>
           <Input
             type="number"
             step="0.1"
@@ -65,7 +65,7 @@ export const TechnicalSpecs = ({ formData, setFormData }: TechnicalSpecsProps) =
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-200">Asientos</label>
+          <label className="block text-xs font-medium text-gray-200 mb-1">Asientos</label>
           <Input
             type="number"
             value={formData.seats || ""}
@@ -80,31 +80,13 @@ export const TechnicalSpecs = ({ formData, setFormData }: TechnicalSpecsProps) =
           />
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-200">Color Ext.</label>
-          <Input
-            value={formData.exterior || ""}
-            onChange={(e) => setFormData({ ...formData, exterior: e.target.value })}
-            placeholder="Arctic Grey"
-            className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-200">Color Int.</label>
-          <Input
-            value={formData.interior || ""}
-            onChange={(e) => setFormData({ ...formData, interior: e.target.value })}
-            placeholder="Black Alcantara"
-            className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
-          />
-        </div>
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-200">Tracción</label>
+          <label className="block text-xs font-medium text-gray-200 mb-1">Tracción</label>
           <Select
             value={formData.drivetrain || ""}
             onValueChange={(value) => setFormData({ ...formData, drivetrain: value })}
           >
-            <SelectTrigger className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white">
-              <SelectValue placeholder="Seleccionar" />
+            <SelectTrigger className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white w-full">
+              <SelectValue placeholder="Sel." />
             </SelectTrigger>
             <SelectContent className="bg-[#1a1a1a] border-[#2a2a2a]">
               <SelectItem value="RWD" className="text-white hover:bg-[#2a2a2a]">
@@ -120,11 +102,29 @@ export const TechnicalSpecs = ({ formData, setFormData }: TechnicalSpecsProps) =
           </Select>
         </div>
         <div className="space-y-1">
-          <label className="text-xs font-medium text-gray-200">Motor</label>
+          <label className="block text-xs font-medium text-gray-200 mb-1">Motor</label>
           <Input
             value={formData.engine || ""}
             onChange={(e) => setFormData({ ...formData, engine: e.target.value })}
-            placeholder="4.0L Twin-Turbo V8"
+            placeholder="V8"
+            className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
+          />
+        </div>
+        <div className="space-y-1 col-span-2 md:col-span-2 lg:col-span-2">
+          <label className="block text-xs font-medium text-gray-200 mb-1">Color Exterior</label>
+          <Input
+            value={formData.exterior || ""}
+            onChange={(e) => setFormData({ ...formData, exterior: e.target.value })}
+            placeholder="Arctic Grey"
+            className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
+          />
+        </div>
+        <div className="space-y-1 col-span-2 md:col-span-2 lg:col-span-2">
+          <label className="block text-xs font-medium text-gray-200 mb-1">Color Interior</label>
+          <Input
+            value={formData.interior || ""}
+            onChange={(e) => setFormData({ ...formData, interior: e.target.value })}
+            placeholder="Black Alcantara"
             className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white placeholder:text-gray-400"
           />
         </div>

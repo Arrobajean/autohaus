@@ -11,7 +11,7 @@ const AdminLayout = () => {
     <SidebarProvider open={sidebarOpen} setOpen={setSidebarOpen} animate={true}>
       <div
         data-admin-layout
-        className="flex h-screen w-full md:flex-row bg-[#0a0a0a]"
+        className="flex h-screen w-full md:flex-row bg-[#0a0a0a] overflow-hidden"
         style={{ backgroundColor: "#0a0a0a !important" }}
       >
         <Sidebar open={sidebarOpen} setOpen={setSidebarOpen} animate={true}>

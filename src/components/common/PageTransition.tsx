@@ -17,7 +17,7 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.15, ease: "easeOut" }}
         className="w-full h-full"
-        style={{ backgroundColor: 'transparent', display: 'flex', flexDirection: 'column' }}
+        style={{ backgroundColor: 'transparent', display: 'flex', flexDirection: 'column', minHeight: 0 }}
       >
         {children}
       </motion.div>

@@ -7,7 +7,11 @@ import { getAvailableCars, generateCarSlug } from "@/data/carsHelpers";
 import { useNavigate } from "react-router-dom";
 import RollingTextButton from "@/components/common/RollingTextButton";
 
-const FeaturedVehiclesSection = memo(() => {
+interface FeaturedVehiclesSectionProps {
+  featuredCarsCount?: number;
+}
+
+const FeaturedVehiclesSection = memo(({ featuredCarsCount = 6 }: FeaturedVehiclesSectionProps) => {
   const [featuredCars, setFeaturedCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -15,7 +19,7 @@ const FeaturedVehiclesSection = memo(() => {
   useEffect(() => {
     const fetchFeaturedCars = async () => {
       if (!db) {
-        setFeaturedCars(getAvailableCars().slice(0, 6));
+        setFeaturedCars(getAvailableCars().slice(0, featuredCarsCount));
         setLoading(false);
         return;
       }
@@ -27,7 +31,7 @@ const FeaturedVehiclesSection = memo(() => {
             collection(db, "cars"),
             where("status", "==", "available"),
             where("featured", "==", true),
-            limit(6)
+            limit(featuredCarsCount)
           );
           const featuredSnapshot = await getDocs(featuredQuery);
           
@@ -47,29 +51,29 @@ const FeaturedVehiclesSection = memo(() => {
         const fallbackQuery = query(
           collection(db, "cars"),
           where("status", "==", "available"),
-          limit(6)
+          limit(featuredCarsCount)
         );
         const fallbackSnapshot = await getDocs(fallbackQuery);
         if (fallbackSnapshot.empty) {
-          setFeaturedCars(getAvailableCars().slice(0, 6));
+          setFeaturedCars(getAvailableCars().slice(0, featuredCarsCount));
         } else {
           // Filtrar manualmente los destacados si existen
           const allCars = fallbackSnapshot.docs.map(
             (doc) => ({ id: doc.id, ...doc.data() } as Car)
           );
           const featured = allCars.filter(car => car.featured === true);
-          setFeaturedCars(featured.length > 0 ? featured.slice(0, 6) : allCars.slice(0, 6));
+          setFeaturedCars(featured.length > 0 ? featured.slice(0, featuredCarsCount) : allCars.slice(0, featuredCarsCount));
         }
       } catch (error) {
         console.error("Error fetching featured cars:", error);
-        setFeaturedCars(getAvailableCars().slice(0, 6));
+        setFeaturedCars(getAvailableCars().slice(0, featuredCarsCount));
       } finally {
         setLoading(false);
       }
     };
 
     fetchFeaturedCars();
-  }, []);
+  }, [featuredCarsCount]);
 
   const handleCardClick = (car: Car) => {
     const slug = generateCarSlug(car);
@@ -123,7 +127,7 @@ const FeaturedVehiclesSection = memo(() => {
         {/* Cars Grid */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mt-8 md:mt-12">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+            {Array.from({ length: featuredCarsCount }, (_, i) => i + 1).map((i) => (
               <div
                 key={i}
                 className="aspect-[3/4] bg-gray-100 rounded-2xl animate-pulse"
