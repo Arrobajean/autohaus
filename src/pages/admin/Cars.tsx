@@ -1,9 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Car } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -11,18 +7,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Eye, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { generateCarSlug } from '@/data/carsHelpers';
+} from "@/components/ui/table";
+import { Plus, Pencil, Trash2, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
+import { generateCarSlug } from "@/data/carsHelpers";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,145 +28,40 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-
-type SortField = 'make' | 'year' | 'price' | 'status' | null;
-type SortDirection = 'asc' | 'desc';
-type StatusFilter = 'all' | 'available' | 'reserved' | 'sold';
+} from "@/components/ui/alert-dialog";
+import { useCarsList } from "./hooks/useCarsList";
+import { SortIcon } from "./Cars/components/SortIcon";
+import { StatusFilter } from "./helpers/carsListHelpers";
 
 const CarsList = () => {
-  const [cars, setCars] = useState<Car[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [carToDelete, setCarToDelete] = useState<string | null>(null);
-  const [sortField, setSortField] = useState<SortField>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const navigate = useNavigate();
-
-  const fetchCars = async () => {
-    if (!db) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const querySnapshot = await getDocs(collection(db, 'cars'));
-      const carsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Car));
-      setCars(carsData);
-    } catch (error) {
-      console.error("Error fetching cars:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCars();
-  }, []);
-
-  const handleDeleteClick = (id: string) => {
-    setCarToDelete(id);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDelete = async () => {
-    if (!carToDelete || !db) return;
-    
-    try {
-      await deleteDoc(doc(db, 'cars', carToDelete));
-      toast.success('Vehículo eliminado correctamente');
-      setDeleteDialogOpen(false);
-      setCarToDelete(null);
-      fetchCars();
-    } catch (error) {
-      console.error("Error deleting car:", error);
-      toast.error('Error al eliminar el vehículo');
-    }
-  };
-
-  const handleRowClick = (id: string) => {
-    navigate(`/admin/cars/${id}`);
-  };
-
-  const sortedCars = useMemo(() => {
-    // Primero filtrar por estado
-    let filtered = cars;
-    if (statusFilter !== 'all') {
-      filtered = cars.filter(car => car.status === statusFilter);
-    }
-
-    // Luego ordenar
-    if (!sortField) return filtered;
-
-    const sorted = [...filtered];
-
-    sorted.sort((a, b) => {
-      if (sortField === 'make') {
-        const aMake = a.make || '';
-        const bMake = b.make || '';
-        const res = aMake.localeCompare(bMake, 'es', { sensitivity: 'base' });
-        return sortDirection === 'asc' ? res : -res;
-      }
-
-      if (sortField === 'status') {
-        const statusOrder = { 'available': 1, 'reserved': 2, 'sold': 3 };
-        const aStatus = statusOrder[a.status as keyof typeof statusOrder] || 0;
-        const bStatus = statusOrder[b.status as keyof typeof statusOrder] || 0;
-        const res = aStatus - bStatus;
-        return sortDirection === 'asc' ? res : -res;
-      }
-
-      let aVal = 0;
-      let bVal = 0;
-
-      if (sortField === 'year') {
-        aVal = a.year ?? 0;
-        bVal = b.year ?? 0;
-      } else if (sortField === 'price') {
-        aVal = a.price ?? 0;
-        bVal = b.price ?? 0;
-      }
-
-      const res = aVal - bVal;
-      return sortDirection === 'asc' ? res : -res;
-    });
-
-    return sorted;
-  }, [cars, sortField, sortDirection, statusFilter]);
-
-  const handleSort = (field: Exclude<SortField, null>) => {
-    if (sortField !== field) {
-      setSortField(field);
-      setSortDirection('asc');
-      return;
-    }
-
-    if (sortDirection === 'asc') {
-      setSortDirection('desc');
-    } else {
-      // tercer clic: volver al orden original
-      setSortField(null);
-    }
-  };
-
-  const renderSortIcon = (field: Exclude<SortField, null>) => {
-    if (sortField !== field) {
-      return <ChevronsUpDown className="w-3 h-3 opacity-40 text-gray-300" />;
-    }
-
-    if (sortDirection === 'asc') {
-      return <ChevronUp className="w-3 h-3 text-white" />;
-    }
-
-    return <ChevronDown className="w-3 h-3 text-white" />;
-  };
+  const {
+    loading,
+    sortedCars,
+    deleteDialogOpen,
+    carToDelete,
+    sortField,
+    sortDirection,
+    statusFilter,
+    setDeleteDialogOpen,
+    setCarToDelete,
+    setStatusFilter,
+    handleDeleteClick,
+    handleDelete,
+    handleRowClick,
+    handleSort,
+  } = useCarsList();
 
   return (
     <div className="space-y-2 md:space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white">Coches</h2>
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white">
+          Coches
+        </h2>
         <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-          <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+          >
             <SelectTrigger className="w-full sm:w-[180px] h-8 sm:h-9 text-xs sm:text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white">
               <SelectValue placeholder="Filtrar por estado" />
             </SelectTrigger>
@@ -179,19 +69,31 @@ const CarsList = () => {
               <SelectItem value="all" className="text-white hover:bg-[#2a2a2a]">
                 Todos los estados
               </SelectItem>
-              <SelectItem value="available" className="text-white hover:bg-[#2a2a2a]">
+              <SelectItem
+                value="available"
+                className="text-white hover:bg-[#2a2a2a]"
+              >
                 Disponible
               </SelectItem>
-              <SelectItem value="reserved" className="text-white hover:bg-[#2a2a2a]">
+              <SelectItem
+                value="reserved"
+                className="text-white hover:bg-[#2a2a2a]"
+              >
                 Reservado
               </SelectItem>
-              <SelectItem value="sold" className="text-white hover:bg-[#2a2a2a]">
+              <SelectItem
+                value="sold"
+                className="text-white hover:bg-[#2a2a2a]"
+              >
                 Vendido
               </SelectItem>
             </SelectContent>
           </Select>
           <Link to="/admin/cars/new">
-            <Button className="w-full sm:w-auto justify-center text-xs h-8 sm:h-9" size="sm">
+            <Button
+              className="w-full sm:w-auto justify-center text-xs h-8 sm:h-9"
+              size="sm"
+            >
               <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
               <span className="hidden sm:inline">Añadir Vehículo</span>
               <span className="sm:hidden">Añadir</span>
@@ -205,7 +107,10 @@ const CarsList = () => {
         {loading ? (
           <>
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="border border-[#2a2a2a] rounded-lg p-3 bg-[#1a1a1a]">
+              <div
+                key={i}
+                className="border border-[#2a2a2a] rounded-lg p-3 bg-[#1a1a1a]"
+              >
                 <div className="flex gap-3">
                   <Skeleton className="w-24 h-24 rounded-md flex-shrink-0 bg-[#2a2a2a]" />
                   <div className="flex-1 space-y-2">
@@ -243,18 +148,27 @@ const CarsList = () => {
                     />
                   ) : (
                     <div className="w-24 h-24 bg-[#222] rounded-lg border border-[#2a2a2a] flex items-center justify-center">
-                      <span className="text-[10px] text-gray-500">Sin foto</span>
+                      <span className="text-[10px] text-gray-500">
+                        Sin foto
+                      </span>
                     </div>
                   )}
                   <div className="absolute top-1 left-1">
-                     <span className={`text-[9px] px-1.5 py-0.5 rounded-md font-medium border shadow-sm ${
-                        car.status === 'available' ? 'bg-green-950/80 text-green-400 border-green-500/30' :
-                        car.status === 'sold' ? 'bg-red-950/80 text-red-400 border-red-500/30' : 
-                        'bg-yellow-950/80 text-yellow-400 border-yellow-500/30'
-                      }`}>
-                        {car.status === 'available' ? 'Disponible' : 
-                         car.status === 'sold' ? 'Vendido' : 'Reservado'}
-                      </span>
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded-md font-medium border shadow-sm ${
+                        car.status === "available"
+                          ? "bg-green-950/80 text-green-400 border-green-500/30"
+                          : car.status === "sold"
+                          ? "bg-red-950/80 text-red-400 border-red-500/30"
+                          : "bg-yellow-950/80 text-yellow-400 border-yellow-500/30"
+                      }`}
+                    >
+                      {car.status === "available"
+                        ? "Disponible"
+                        : car.status === "sold"
+                        ? "Vendido"
+                        : "Reservado"}
+                    </span>
                   </div>
                 </div>
 
@@ -263,21 +177,27 @@ const CarsList = () => {
                   <div>
                     <div className="flex justify-between items-start gap-2">
                       <h3 className="text-sm font-bold text-white leading-tight line-clamp-2">
-                        {car.make} <span className="text-gray-300 font-normal">{car.model}</span>
+                        {car.make}{" "}
+                        <span className="text-gray-300 font-normal">
+                          {car.model}
+                        </span>
                       </h3>
                     </div>
                     <div className="text-xs text-gray-400 mt-1 font-medium">
                       {car.year} • {car.mileage?.toLocaleString()} km
                     </div>
                   </div>
-                  
+
                   <div className="flex items-end justify-between mt-2">
                     <div className="text-base font-bold text-white tracking-tight">
                       {car.price.toLocaleString()} €
                     </div>
-                    
+
                     {/* Acciones */}
-                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <div
+                      className="flex gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Button
                         variant="ghost"
                         size="icon"
@@ -285,12 +205,15 @@ const CarsList = () => {
                         onClick={(e) => {
                           e.stopPropagation();
                           const slug = generateCarSlug(car);
-                          window.open(`/coches/${slug}`, '_blank');
+                          window.open(`/coches/${slug}`, "_blank");
                         }}
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
-                      <Link to={`/admin/cars/${car.id}`} onClick={(e) => e.stopPropagation()}>
+                      <Link
+                        to={`/admin/cars/${car.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Button
                           variant="ghost"
                           size="icon"
@@ -300,7 +223,10 @@ const CarsList = () => {
                           <Pencil className="w-4 h-4" />
                         </Button>
                       </Link>
-                      <AlertDialog open={deleteDialogOpen && carToDelete === car.id} onOpenChange={setDeleteDialogOpen}>
+                      <AlertDialog
+                        open={deleteDialogOpen && carToDelete === car.id}
+                        onOpenChange={setDeleteDialogOpen}
+                      >
                         <AlertDialogTrigger asChild>
                           <Button
                             variant="ghost"
@@ -316,13 +242,20 @@ const CarsList = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent className="bg-[#1a1a1a] border-[#2a2a2a] text-white w-[90%] rounded-xl">
                           <AlertDialogHeader>
-                            <AlertDialogTitle className="text-white">¿Eliminar vehículo?</AlertDialogTitle>
+                            <AlertDialogTitle className="text-white">
+                              ¿Eliminar vehículo?
+                            </AlertDialogTitle>
                             <AlertDialogDescription className="text-gray-300">
                               Esta acción no se puede deshacer.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter className="flex-row gap-2 justify-end">
-                            <AlertDialogCancel onClick={() => setCarToDelete(null)} className="bg-[#2a2a2a] border-[#2a2a2a] text-gray-200 hover:bg-[#3a3a3a] mt-0">Cancelar</AlertDialogCancel>
+                            <AlertDialogCancel
+                              onClick={() => setCarToDelete(null)}
+                              className="bg-[#2a2a2a] border-[#2a2a2a] text-gray-200 hover:bg-[#3a3a3a] mt-0"
+                            >
+                              Cancelar
+                            </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={handleDelete}
                               className="bg-red-600 hover:bg-red-700 text-white"
@@ -346,45 +279,67 @@ const CarsList = () => {
         <Table className="text-xs sm:text-sm">
           <TableHeader>
             <TableRow className="h-8 sm:h-10 border-[#2a2a2a] hover:bg-[#2a2a2a]">
-              <TableHead className="text-[10px] sm:text-xs px-2 sm:px-4 text-gray-300">Imagen</TableHead>
+              <TableHead className="text-[10px] sm:text-xs px-2 sm:px-4 text-gray-300">
+                Imagen
+              </TableHead>
               <TableHead
                 className="text-[10px] sm:text-xs px-2 sm:px-4 text-gray-300 cursor-pointer select-none"
-                onClick={() => handleSort('make')}
+                onClick={() => handleSort("make")}
               >
                 <div className="flex items-center gap-1">
                   <span>Marca</span>
-                  {renderSortIcon('make')}
+                  <SortIcon
+                    field="make"
+                    currentSortField={sortField}
+                    sortDirection={sortDirection}
+                  />
                 </div>
               </TableHead>
-              <TableHead className="text-[10px] sm:text-xs px-2 sm:px-4 text-gray-300">Modelo</TableHead>
+              <TableHead className="text-[10px] sm:text-xs px-2 sm:px-4 text-gray-300">
+                Modelo
+              </TableHead>
               <TableHead
                 className="text-[10px] sm:text-xs px-2 sm:px-4 text-gray-300 cursor-pointer select-none"
-                onClick={() => handleSort('year')}
+                onClick={() => handleSort("year")}
               >
                 <div className="flex items-center gap-1">
                   <span>Año</span>
-                  {renderSortIcon('year')}
+                  <SortIcon
+                    field="year"
+                    currentSortField={sortField}
+                    sortDirection={sortDirection}
+                  />
                 </div>
               </TableHead>
               <TableHead
                 className="text-[10px] sm:text-xs px-2 sm:px-4 text-gray-300 cursor-pointer select-none"
-                onClick={() => handleSort('price')}
+                onClick={() => handleSort("price")}
               >
                 <div className="flex items-center gap-1">
                   <span>Precio</span>
-                  {renderSortIcon('price')}
+                  <SortIcon
+                    field="price"
+                    currentSortField={sortField}
+                    sortDirection={sortDirection}
+                  />
                 </div>
               </TableHead>
               <TableHead
                 className="text-[10px] sm:text-xs px-2 sm:px-4 text-gray-300 cursor-pointer select-none"
-                onClick={() => handleSort('status')}
+                onClick={() => handleSort("status")}
               >
                 <div className="flex items-center gap-1">
                   <span>Estado</span>
-                  {renderSortIcon('status')}
+                  <SortIcon
+                    field="status"
+                    currentSortField={sortField}
+                    sortDirection={sortDirection}
+                  />
                 </div>
               </TableHead>
-              <TableHead className="text-right text-[10px] sm:text-xs px-2 sm:px-4 text-gray-300">Acciones</TableHead>
+              <TableHead className="text-right text-[10px] sm:text-xs px-2 sm:px-4 text-gray-300">
+                Acciones
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -422,7 +377,12 @@ const CarsList = () => {
               </>
             ) : sortedCars.length === 0 ? (
               <TableRow className="border-[#2a2a2a]">
-                <TableCell colSpan={7} className="text-center text-xs py-2 sm:py-3 text-gray-400">No se encontraron vehículos</TableCell>
+                <TableCell
+                  colSpan={7}
+                  className="text-center text-xs py-2 sm:py-3 text-gray-400"
+                >
+                  No se encontraron vehículos
+                </TableCell>
               </TableRow>
             ) : (
               sortedCars.map((car) => (
@@ -433,20 +393,40 @@ const CarsList = () => {
                 >
                   <TableCell className="py-1 sm:py-2 px-2 sm:px-4">
                     {car.images && car.images.length > 0 && (
-                      <img src={car.images[0]} alt={car.model} className="w-14 h-9 object-cover rounded" />
+                      <img
+                        src={car.images[0]}
+                        alt={car.model}
+                        className="w-14 h-9 object-cover rounded"
+                      />
                     )}
                   </TableCell>
-                  <TableCell className="text-[11px] sm:text-sm py-1 sm:py-2 px-2 sm:px-4 font-medium text-white">{car.make}</TableCell>
-                  <TableCell className="text-[11px] sm:text-sm py-1 sm:py-2 px-2 sm:px-4 text-gray-200">{car.model}</TableCell>
-                  <TableCell className="text-[11px] sm:text-sm py-1 sm:py-2 px-2 sm:px-4 text-gray-200">{car.year}</TableCell>
-                  <TableCell className="text-[11px] sm:text-sm py-1 sm:py-2 px-2 sm:px-4 font-semibold text-white">{car.price.toLocaleString()} €</TableCell>
+                  <TableCell className="text-[11px] sm:text-sm py-1 sm:py-2 px-2 sm:px-4 font-medium text-white">
+                    {car.make}
+                  </TableCell>
+                  <TableCell className="text-[11px] sm:text-sm py-1 sm:py-2 px-2 sm:px-4 text-gray-200">
+                    {car.model}
+                  </TableCell>
+                  <TableCell className="text-[11px] sm:text-sm py-1 sm:py-2 px-2 sm:px-4 text-gray-200">
+                    {car.year}
+                  </TableCell>
+                  <TableCell className="text-[11px] sm:text-sm py-1 sm:py-2 px-2 sm:px-4 font-semibold text-white">
+                    {car.price.toLocaleString()} €
+                  </TableCell>
                   <TableCell className="py-1 sm:py-2 px-2 sm:px-4">
-                    <span className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[9px] sm:text-[10px] border ${
-                      car.status === 'available' ? 'bg-green-500/20 text-green-300 border-green-500/30' :
-                      car.status === 'sold' ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
-                    }`}>
-                      {car.status === 'available' ? 'Disponible' : 
-                       car.status === 'sold' ? 'Vendido' : 'Reservado'}
+                    <span
+                      className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-[9px] sm:text-[10px] border ${
+                        car.status === "available"
+                          ? "bg-green-500/20 text-green-300 border-green-500/30"
+                          : car.status === "sold"
+                          ? "bg-red-500/20 text-red-300 border-red-500/30"
+                          : "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+                      }`}
+                    >
+                      {car.status === "available"
+                        ? "Disponible"
+                        : car.status === "sold"
+                        ? "Vendido"
+                        : "Reservado"}
                     </span>
                   </TableCell>
                   <TableCell className="text-right py-1 sm:py-2 px-2 sm:px-4">
@@ -454,21 +434,24 @@ const CarsList = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-white hover:text-gray-200 hover:bg-[#2a2a2a]"
+                        className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           const slug = generateCarSlug(car);
-                          window.open(`/coches/${slug}`, '_blank');
+                          window.open(`/coches/${slug}`, "_blank");
                         }}
                         title="Ver página pública"
                       >
                         <Eye className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                       </Button>
-                      <Link to={`/admin/cars/${car.id}`} onClick={(e) => e.stopPropagation()}>
+                      <Link
+                        to={`/admin/cars/${car.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-white hover:text-gray-200 hover:bg-[#2a2a2a]"
+                          className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
                           onClick={(e) => {
                             e.stopPropagation();
                           }}
@@ -476,29 +459,40 @@ const CarsList = () => {
                           <Pencil className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                         </Button>
                       </Link>
-                      <AlertDialog open={deleteDialogOpen && carToDelete === car.id} onOpenChange={setDeleteDialogOpen}>
+                      <AlertDialog
+                        open={deleteDialogOpen && carToDelete === car.id}
+                        onOpenChange={setDeleteDialogOpen}
+                      >
                         <AlertDialogTrigger asChild>
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10"
+                            className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-red-500 hover:text-red-400 hover:bg-red-500/10"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDeleteClick(car.id);
                             }}
                           >
-                            <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-red-500" />
+                            <Trash2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Eliminar vehículo?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              ¿Eliminar vehículo?
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Esta acción no se puede deshacer. Se eliminará permanentemente el vehículo "{car.make} {car.model}".
+                              Esta acción no se puede deshacer. Se eliminará
+                              permanentemente el vehículo "{car.make}{" "}
+                              {car.model}".
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel onClick={() => setCarToDelete(null)}>Cancelar</AlertDialogCancel>
+                            <AlertDialogCancel
+                              onClick={() => setCarToDelete(null)}
+                            >
+                              Cancelar
+                            </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={handleDelete}
                               className="bg-red-600 hover:bg-red-700"
