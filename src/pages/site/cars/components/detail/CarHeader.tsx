@@ -20,17 +20,18 @@ export const CarHeader = ({ car }: CarHeaderProps) => {
 
       {/* Title */}
       <h1 className="text-5xl md:text-[5rem] mb-6 text-black text-center">
-        {car.make} {car.model}
+        {car.heroTitle || `${car.make} ${car.model}`}
       </h1>
 
       {/* Description */}
-      <p
-        className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed text-center text-wrap-safe"
-        style={{ textWrap: "pretty" }}
-      >
-        {car.description ||
-          "A track-focused masterpiece combining race-bred aerodynamics, precision engineering, and everyday usability."}
-      </p>
+      {car.description && (
+        <p
+          className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed text-center text-wrap-safe"
+          style={{ textWrap: "pretty" }}
+        >
+          {car.description}
+        </p>
+      )}
 
       {/* Price */}
       <div className="mb-8 flex justify-center">

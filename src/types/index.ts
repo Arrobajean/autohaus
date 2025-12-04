@@ -9,6 +9,9 @@ export interface Car {
   transmission: string;
   images: string[];
   description: string;
+  heroTitle?: string;
+  parallaxTitle?: string;
+  parallaxSubtitle?: string;
   category?: string;
   status: "available" | "sold" | "reserved";
   featured?: boolean; // Si el coche aparece en la sección de destacados del landing

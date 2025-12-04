@@ -11,9 +11,11 @@ export const useAdminSidebar = () => {
     if (typeof window !== "undefined" && window.innerWidth >= 768) {
       setSidebarOpen(true);
     }
-    // Add admin-panel class to body for dark theme
+    // Add admin-panel class to html and body to prevent scroll
+    document.documentElement.classList.add('admin-panel');
     document.body.classList.add('admin-panel');
     return () => {
+      document.documentElement.classList.remove('admin-panel');
       document.body.classList.remove('admin-panel');
     };
   }, []);

@@ -45,7 +45,11 @@ const CarForm = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+            style={{ minHeight: 0 }}
+          >
             <BasicInfoFields
               formData={formData}
               setFormData={setFormData}

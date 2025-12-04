@@ -115,9 +115,7 @@ export const ParallaxSection = ({ car, animations }: ParallaxSectionProps) => {
             color: 'var(--black-custom)',
           }}
         >
-          El {car.year} {car.make} {car.model}
-          <br />
-          ofrece rendimiento y precisión
+          {car.parallaxTitle || `El ${car.year} ${car.make} ${car.model} ofrece rendimiento y precisión`}
         </motion.h2>
         <motion.p
           className="text-base md:text-lg lg:text-xl text-black leading-relaxed max-w-2xl mx-auto"
@@ -126,10 +124,7 @@ export const ParallaxSection = ({ car, animations }: ParallaxSectionProps) => {
             color: 'var(--black-custom)',
           }}
         >
-          Un verdadero icono que combina la usabilidad diaria con la velocidad
-          de un supercar,
-          <br className="hidden md:block" />
-          construido para aquellos que no esperan nada menos que la perfección.
+          {car.parallaxSubtitle || "Un verdadero icono que combina la usabilidad diaria con la velocidad de un supercar, construido para aquellos que no esperan nada menos que la perfección."}
         </motion.p>
       </div>
     </div>

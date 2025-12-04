@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ export const useCarImages = () => {
   const [uploading, setUploading] = useState(false);
   const [deleteImageDialogOpen, setDeleteImageDialogOpen] = useState(false);
   const [imageToDeleteIndex, setImageToDeleteIndex] = useState<number | null>(null);
+  const processingFilesRef = useRef<Set<string>>(new Set());
 
   const handleImageChange = async (allFiles: File[]) => {
     if (!storage) {
@@ -18,17 +19,36 @@ export const useCarImages = () => {
       return;
     }
 
-    // Identificar archivos nuevos (que no están en el estado actual)
+    // Si estamos subiendo, ignorar nuevas llamadas
+    if (uploading) {
+      return;
+    }
+
+    // Si no hay archivos, solo actualizar el estado (puede ser una limpieza)
+    if (allFiles.length === 0) {
+      setImages([]);
+      setImagePreviews([]);
+      return;
+    }
+
+    // Identificar archivos nuevos (que no están en el estado actual ni siendo procesados)
     const existingFilesSet = new Set(
       images.map((f) => `${f.name}-${f.size}-${f.lastModified}`)
     );
-    const newFiles = allFiles.filter(
-      (file) =>
-        !existingFilesSet.has(`${file.name}-${file.size}-${file.lastModified}`)
-    );
+    
+    const newFiles = allFiles.filter((file) => {
+      const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+      return !existingFilesSet.has(fileKey) && !processingFilesRef.current.has(fileKey);
+    });
 
     // Si hay archivos nuevos, subirlos automáticamente
     if (newFiles.length > 0) {
+      // Marcar archivos como en proceso
+      newFiles.forEach((file) => {
+        const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+        processingFilesRef.current.add(fileKey);
+      });
+
       setUploading(true);
       try {
         const uploadedUrls: string[] = [];
@@ -63,6 +83,12 @@ export const useCarImages = () => {
         setImages([]);
         setImagePreviews([]);
 
+        // Limpiar los archivos del ref de procesamiento
+        newFiles.forEach((file) => {
+          const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+          processingFilesRef.current.delete(fileKey);
+        });
+
         toast.success(
           `${newFiles.length} imagen${newFiles.length > 1 ? "es" : ""} subida${
             newFiles.length > 1 ? "s" : ""
@@ -72,10 +98,17 @@ export const useCarImages = () => {
         console.error("Error subiendo imágenes:", error);
         toast.error(`Error al subir imágenes: ${error.message}`);
         setImages(allFiles);
+        
+        // Limpiar los archivos del ref de procesamiento en caso de error
+        newFiles.forEach((file) => {
+          const fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+          processingFilesRef.current.delete(fileKey);
+        });
       } finally {
         setUploading(false);
       }
     } else {
+      // Si no hay archivos nuevos, solo actualizar el estado
       setImages(allFiles);
     }
   };

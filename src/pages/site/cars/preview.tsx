@@ -4,8 +4,10 @@ import { useState } from "react";
 import { Car } from "@/types";
 import { CarHeader } from "./components/detail/CarHeader";
 import { CarImageGallery } from "./components/detail/CarImageGallery";
+import { ParallaxSection } from "./components/detail/ParallaxSection";
 import { CarSpecifications } from "./components/detail/CarSpecifications";
 import { CarDetailCTA } from "./components/detail/CarDetailCTA";
+import { useParallaxAnimations } from "./hooks/useParallaxAnimations";
 
 const CarDetailPreview = () => {
   const location = useLocation();
@@ -15,6 +17,7 @@ const CarDetailPreview = () => {
   const returnTo = state?.returnTo || "/admin/cars";
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const { parallaxAnimations } = useParallaxAnimations(car);
 
   if (!car) {
     return (
@@ -89,6 +92,10 @@ const CarDetailPreview = () => {
               selectedImageIndex={selectedImageIndex}
               onImageSelect={setSelectedImageIndex}
             />
+          </div>
+
+          <div className="hidden md:block">
+            <ParallaxSection car={car} animations={parallaxAnimations} />
           </div>
 
           <CarSpecifications car={car} />
