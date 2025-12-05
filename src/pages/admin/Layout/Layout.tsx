@@ -1,7 +1,7 @@
 import { SidebarProvider, Sidebar } from "@/components/ui/sidebar";
 import { useAdminSidebar } from "@/hooks/useAdminSidebar";
-import { MainContent } from "./Layout/components/MainContent";
-import { SidebarContent } from "./Layout/components/SidebarContent";
+import { MainContent } from "./components/MainContent";
+import { SidebarContent } from "./components/SidebarContent";
 
 const AdminLayout = () => {
   const { sidebarOpen, setSidebarOpen, handleLogout, sidebarLinks } =

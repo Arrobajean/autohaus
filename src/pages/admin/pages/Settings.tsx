@@ -9,27 +9,32 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { ImageUploadWithValidation } from "../features/settings/components/ImageUploadWithValidation";
 
 const Settings = () => {
   const {
     seoSettings,
     homepageSettings,
+    emailSettings,
     loading,
     saving,
     updateSEOSettings,
     updateHomepageSettings,
+    updateEmailSettings,
   } = useSiteSettings();
 
   const [seoFormData, setSeoFormData] = useState(seoSettings);
   const [homepageFormData, setHomepageFormData] = useState(homepageSettings);
+  const [emailFormData, setEmailFormData] = useState(emailSettings);
 
   // Actualizar formularios cuando se cargan los datos
   useEffect(() => {
     if (!loading) {
       setSeoFormData(seoSettings);
       setHomepageFormData(homepageSettings);
+      setEmailFormData(emailSettings);
     }
-  }, [seoSettings, homepageSettings, loading]);
+  }, [seoSettings, homepageSettings, emailSettings, loading]);
 
   const handleSEOSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +44,11 @@ const Settings = () => {
   const handleHomepageSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await updateHomepageSettings(homepageFormData);
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await updateEmailSettings(emailFormData);
   };
 
   if (loading) {
@@ -58,7 +68,7 @@ const Settings = () => {
       </div>
 
       <Tabs defaultValue="seo" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 h-10 bg-[#1a1a1a] border border-[#2a2a2a] p-1">
+        <TabsList className="grid w-full grid-cols-3 h-10 bg-[#1a1a1a] border border-[#2a2a2a] p-1">
           <TabsTrigger 
             value="seo" 
             className="text-xs sm:text-sm data-[state=active]:bg-[#2a2a2a] data-[state=active]:text-white text-gray-400 h-full"
@@ -70,6 +80,12 @@ const Settings = () => {
             className="text-xs sm:text-sm data-[state=active]:bg-[#2a2a2a] data-[state=active]:text-white text-gray-400 h-full"
           >
             Inicio
+          </TabsTrigger>
+          <TabsTrigger 
+            value="emails"
+            className="text-xs sm:text-sm data-[state=active]:bg-[#2a2a2a] data-[state=active]:text-white text-gray-400 h-full"
+          >
+            Emails
           </TabsTrigger>
         </TabsList>
 
@@ -143,16 +159,26 @@ const Settings = () => {
                   </div>
 
                   <div className="space-y-2 lg:col-span-2">
-                    <Label htmlFor="ogImageUrl" className="text-white text-xs font-medium">
-                      URL de Imagen Open Graph
-                    </Label>
-                    <Input
-                      id="ogImageUrl"
+                    <ImageUploadWithValidation
                       value={seoFormData.ogImageUrl}
-                      onChange={(e) => setSeoFormData({ ...seoFormData, ogImageUrl: e.target.value })}
-                      className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white"
-                      placeholder="https://autohaus.es/images/logo/autohaus.png"
+                      onChange={(url) => setSeoFormData({ ...seoFormData, ogImageUrl: url })}
+                      label="Imagen Open Graph"
+                      description="Imagen que se muestra cuando se comparte el sitio en redes sociales"
+                      folder="settings/og"
+                      validation={{
+                        minWidth: 1200,
+                        minHeight: 630,
+                        aspectRatio: 1.91, // 1200/630
+                      }}
                     />
+                    {seoFormData.ogImageUrl && (
+                      <Input
+                        value={seoFormData.ogImageUrl}
+                        onChange={(e) => setSeoFormData({ ...seoFormData, ogImageUrl: e.target.value })}
+                        className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white mt-2"
+                        placeholder="O ingresa la URL manualmente"
+                      />
+                    )}
                   </div>
 
                   <div className="space-y-2 lg:col-span-2">
@@ -169,17 +195,29 @@ const Settings = () => {
                   </div>
 
                   <div className="space-y-2 lg:col-span-2">
-                    <Label htmlFor="faviconUrl" className="text-white text-xs font-medium">
-                      URL del Favicon
-                    </Label>
-                    <Input
-                      id="faviconUrl"
+                    <ImageUploadWithValidation
                       value={seoFormData.faviconUrl || ''}
-                      onChange={(e) => setSeoFormData({ ...seoFormData, faviconUrl: e.target.value })}
-                      className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white"
-                      placeholder="/favicon/favicon.ico"
+                      onChange={(url) => setSeoFormData({ ...seoFormData, faviconUrl: url })}
+                      label="Favicon"
+                      description="Icono que aparece en la pestaña del navegador"
+                      folder="settings/favicon"
+                      validation={{
+                        square: true,
+                        minWidth: 16,
+                        minHeight: 16,
+                        maxWidth: 512,
+                        maxHeight: 512,
+                      }}
+                      accept="image/png,image/x-icon,image/vnd.microsoft.icon"
                     />
-                    <p className="text-[10px] text-gray-400">Ruta relativa o URL absoluta del favicon</p>
+                    {(seoFormData.faviconUrl || '') && (
+                      <Input
+                        value={seoFormData.faviconUrl || ''}
+                        onChange={(e) => setSeoFormData({ ...seoFormData, faviconUrl: e.target.value })}
+                        className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white mt-2"
+                        placeholder="O ingresa la URL manualmente"
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -305,6 +343,75 @@ const Settings = () => {
                         />
                       </div>
                     ))}
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-4 border-t border-[#2a2a2a]">
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    size="sm"
+                    className="h-9 text-sm bg-blue-600 hover:bg-blue-700 text-white px-6 w-full sm:w-auto"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Guardando...
+                      </>
+                    ) : (
+                      "Guardar Cambios"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="emails" className="mt-4">
+          {/* Configuración de Emails */}
+          <Card className="bg-[#1a1a1a] border-[#2a2a2a]">
+            <CardHeader className="px-4 sm:px-6 py-4 border-b border-[#2a2a2a]">
+              <CardTitle className="text-white text-base sm:text-lg">Configuración de Emails</CardTitle>
+              <CardDescription className="text-gray-400 text-xs sm:text-sm">
+                Configura los correos donde se recibirán las notificaciones de contactos y callbacks
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="px-4 sm:px-6 py-4">
+              <form onSubmit={handleEmailSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="contactEmail" className="text-white text-xs font-medium">
+                      Email para Contactos
+                    </Label>
+                    <Input
+                      id="contactEmail"
+                      type="email"
+                      value={emailFormData.contactEmail}
+                      onChange={(e) => setEmailFormData({ ...emailFormData, contactEmail: e.target.value })}
+                      className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                      placeholder="contacto@autohaus.com"
+                    />
+                    <p className="text-[10px] text-gray-400">
+                      Email donde se recibirán los formularios de contacto general
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="callbackEmail" className="text-white text-xs font-medium">
+                      Email para Callbacks
+                    </Label>
+                    <Input
+                      id="callbackEmail"
+                      type="email"
+                      value={emailFormData.callbackEmail}
+                      onChange={(e) => setEmailFormData({ ...emailFormData, callbackEmail: e.target.value })}
+                      className="h-9 text-sm bg-[#0a0a0a] border-[#2a2a2a] text-white"
+                      placeholder="callbacks@autohaus.com"
+                    />
+                    <p className="text-[10px] text-gray-400">
+                      Email donde se recibirán las solicitudes de callback (llamadas)
+                    </p>
                   </div>
                 </div>
 

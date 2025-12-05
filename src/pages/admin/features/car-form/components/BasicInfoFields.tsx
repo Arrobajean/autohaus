@@ -9,10 +9,10 @@ import {
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { CAR_BRANDS } from "@/data/carBrands";
-import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
+import { Checkbox } from "@/components/ui/radix/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { getMaxFeaturedCars } from "@/pages/admin/helpers/dashboardHelpers";
+import { getMaxFeaturedCars } from "@/pages/admin/features/dashboard/helpers/dashboardHelpers";
 
 interface BasicInfoFieldsProps {
   formData: Partial<Car>;
@@ -35,7 +35,9 @@ export const BasicInfoFields = ({
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-3">
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-gray-200 mb-1">Marca</label>
+            <label className="block text-xs font-medium text-gray-200 mb-1">
+              Marca
+            </label>
             <div className="w-full">
               <Combobox
                 options={CAR_BRANDS}
@@ -50,7 +52,9 @@ export const BasicInfoFields = ({
             </div>
           </div>
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-gray-200 mb-1">Modelo</label>
+            <label className="block text-xs font-medium text-gray-200 mb-1">
+              Modelo
+            </label>
             <Input
               value={formData.model}
               onChange={(e) =>
@@ -61,7 +65,9 @@ export const BasicInfoFields = ({
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-gray-200 mb-1">Año</label>
+            <label className="block text-xs font-medium text-gray-200 mb-1">
+              Año
+            </label>
             <Input
               type="number"
               value={formData.year}
@@ -93,7 +99,9 @@ export const BasicInfoFields = ({
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-gray-200 mb-1">Km</label>
+            <label className="block text-xs font-medium text-gray-200 mb-1">
+              Km
+            </label>
             <Input
               type="number"
               value={formData.mileage}
@@ -163,7 +171,9 @@ export const BasicInfoFields = ({
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-gray-200 mb-1">Categoría</label>
+            <label className="block text-xs font-medium text-gray-200 mb-1">
+              Categoría
+            </label>
             <Select
               value={formData.category || "luxury"}
               onValueChange={(value: any) =>
@@ -186,7 +196,10 @@ export const BasicInfoFields = ({
                 >
                   Premium
                 </SelectItem>
-                <SelectItem value="suv" className="text-white hover:bg-[#2a2a2a]">
+                <SelectItem
+                  value="suv"
+                  className="text-white hover:bg-[#2a2a2a]"
+                >
                   SUV
                 </SelectItem>
               </SelectContent>
@@ -200,7 +213,9 @@ export const BasicInfoFields = ({
         <h3 className="text-sm font-semibold mb-3 text-white">Opciones</h3>
         <div className="flex flex-wrap items-end gap-6">
           <div className="space-y-1">
-            <label className="block text-xs font-medium text-gray-200 mb-1">Estado</label>
+            <label className="block text-xs font-medium text-gray-200 mb-1">
+              Estado
+            </label>
             <Select
               value={formData.status}
               onValueChange={(value: any) =>
@@ -232,14 +247,18 @@ export const BasicInfoFields = ({
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="flex items-center gap-2 h-9 border border-[#2a2a2a] rounded-md px-3 bg-[#0a0a0a]">
             <Checkbox
               id="featured"
               checked={formData.featured || false}
               onCheckedChange={(checked) => {
                 const maxFeatured = getMaxFeaturedCars();
-                if (checked && featuredCount >= maxFeatured && !originalFeatured) {
+                if (
+                  checked &&
+                  featuredCount >= maxFeatured &&
+                  !originalFeatured
+                ) {
                   toast.error(
                     `Ya hay ${maxFeatured} coches destacados. Desactiva uno primero para añadir este.`,
                     { duration: 4000 }

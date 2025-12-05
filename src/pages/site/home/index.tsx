@@ -29,19 +29,35 @@ const Index = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Renderizar Helmet inmediatamente, incluso si los settings están cargando
+  // Esto evita que se muestre el título hardcodeado del HTML
   return (
     <HelmetProvider>
       <Helmet>
-        <title>{seoSettings.siteTitle}</title>
-        <meta name="description" content={seoSettings.siteDescription} />
-        <meta name="keywords" content={seoSettings.keywords} />
-        <meta property="og:title" content={seoSettings.siteTitle} />
-        <meta property="og:description" content={seoSettings.siteDescription} />
-        <meta property="og:image" content={seoSettings.ogImageUrl} />
-        <meta property="og:site_name" content={seoSettings.ogSiteName} />
-        <meta property="twitter:card" content={seoSettings.twitterCard} />
-        <link rel="canonical" href={seoSettings.canonicalUrl} />
-        {seoSettings.faviconUrl && <link rel="icon" href={seoSettings.faviconUrl} />}
+        <title>{seoSettings?.siteTitle || "AutoHaus"}</title>
+        <meta name="description" content={seoSettings?.siteDescription || ""} />
+        <meta name="keywords" content={seoSettings?.keywords || ""} />
+        <meta
+          property="og:title"
+          content={seoSettings?.siteTitle || "AutoHaus"}
+        />
+        <meta
+          property="og:description"
+          content={seoSettings?.siteDescription || ""}
+        />
+        <meta property="og:image" content={seoSettings?.ogImageUrl || ""} />
+        <meta
+          property="og:site_name"
+          content={seoSettings?.ogSiteName || "AutoHaus"}
+        />
+        <meta
+          property="twitter:card"
+          content={seoSettings?.twitterCard || "summary_large_image"}
+        />
+        <link rel="canonical" href={seoSettings?.canonicalUrl || "/"} />
+        {seoSettings?.faviconUrl && (
+          <link rel="icon" href={seoSettings.faviconUrl} />
+        )}
       </Helmet>
       <div
         className="min-h-screen bg-white"

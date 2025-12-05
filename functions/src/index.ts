@@ -44,17 +44,30 @@ export const sendContactEmail = functions.firestore
   .document("contactos/{contactId}")
   .onCreate(async (snap: QueryDocumentSnapshot, context) => {
     const data = snap.data();
+    
+    // Obtener email de destino desde Firestore
+    let toEmail = functions.config().gmail.email; // Fallback
+    try {
+      const settingsDoc = await admin.firestore().doc("settings/site").get();
+      if (settingsDoc.exists()) {
+        const settings = settingsDoc.data();
+        toEmail = settings?.emails?.contactEmail || functions.config().contact?.email || functions.config().gmail.email;
+      }
+    } catch (error) {
+      console.error("Error obteniendo configuración de emails:", error);
+    }
+    
     const mailOptions = {
-      from: functions.config().gmail.email, // Remitente
-      to: functions.config().contact?.email || functions.config().gmail.email, // Destinatarios
-      subject: "Nuevo contacto desde la web",
+      from: functions.config().gmail.email,
+      to: toEmail,
+      subject: "Nuevo contacto desde AutoHaus",
       text: `
+        Nuevo contacto desde la web de AutoHaus
+        
         Nombre: ${data?.nombre || data?.name}
         Email: ${data?.email || ""}
         Teléfono: ${data?.telefono || data?.phone || ""}
         Mensaje: ${data?.mensaje || data?.message || ""}
-        ${data?.tipoReforma ? `Tipo de reforma: ${data.tipoReforma}` : ""}
-        ${data?.presupuesto ? `Presupuesto: ${data.presupuesto}` : ""}
         Fecha: ${
           data?.fecha
             ? data.fecha.toDate
@@ -65,21 +78,11 @@ export const sendContactEmail = functions.firestore
         UserAgent: ${data?.userAgent || ""}
       `,
       html: `
-        <h2>Nuevo contacto desde la web</h2>
+        <h2>Nuevo contacto desde AutoHaus</h2>
         <p><strong>Nombre:</strong> ${data?.nombre || data?.name}</p>
         <p><strong>Email:</strong> ${data?.email || ""}</p>
         <p><strong>Teléfono:</strong> ${data?.telefono || data?.phone || ""}</p>
         <p><strong>Mensaje:</strong> ${data?.mensaje || data?.message || ""}</p>
-        ${
-          data?.tipoReforma
-            ? `<p><strong>Tipo de reforma:</strong> ${data.tipoReforma}</p>`
-            : ""
-        }
-        ${
-          data?.presupuesto
-            ? `<p><strong>Presupuesto:</strong> ${data.presupuesto}</p>`
-            : ""
-        }
         <p><strong>Fecha:</strong> ${
           data?.fecha
             ? data.fecha.toDate
@@ -98,14 +101,29 @@ export const sendCallbackEmail = functions.firestore
   .document("callbacks/{callbackId}")
   .onCreate(async (snap, context) => {
     const data = snap.data();
+    
+    // Obtener email de destino desde Firestore
+    let toEmail = functions.config().gmail.email; // Fallback
+    try {
+      const settingsDoc = await admin.firestore().doc("settings/site").get();
+      if (settingsDoc.exists()) {
+        const settings = settingsDoc.data();
+        toEmail = settings?.emails?.callbackEmail || 
+                  functions.config().contact?.callback_to ||
+                  functions.config().contact?.email || 
+                  functions.config().gmail.email;
+      }
+    } catch (error) {
+      console.error("Error obteniendo configuración de emails:", error);
+    }
+    
     const mailOptions = {
       from: functions.config().gmail.email,
-      to:
-        functions.config().contact?.callback_to ||
-        functions.config().contact?.email ||
-        functions.config().gmail.email,
-      subject: "Nuevo callback desde la web",
+      to: toEmail,
+      subject: "Nueva solicitud de callback - AutoHaus",
       text: `
+        Nueva solicitud de callback desde AutoHaus
+        
         Nombre: ${data?.nombre || data?.name}
         Teléfono: ${data?.telefono || data?.phone || ""}
         Mensaje: ${data?.mensaje || data?.message || ""}
@@ -119,7 +137,7 @@ export const sendCallbackEmail = functions.firestore
         UserAgent: ${data?.userAgent || ""}
       `,
       html: `
-        <h2>Nuevo callback desde la web</h2>
+        <h2>Nueva solicitud de callback - AutoHaus</h2>
         <p><strong>Nombre:</strong> ${data?.nombre || data?.name}</p>
         <p><strong>Teléfono:</strong> ${data?.telefono || data?.phone || ""}</p>
         <p><strong>Mensaje:</strong> ${data?.mensaje || data?.message || ""}</p>
@@ -180,8 +198,6 @@ export const contactFormHandler = functions.https.onRequest(
       nombre,
       email,
       telefono,
-      tipoReforma,
-      presupuesto,
       mensaje,
       userAgent,
       website, // honeypot
@@ -206,8 +222,6 @@ export const contactFormHandler = functions.https.onRequest(
         nombre: nombre.trim(),
         email: email.trim().toLowerCase(),
         telefono: telefono.trim(),
-        tipoReforma: tipoReforma || "",
-        presupuesto: presupuesto || "",
         mensaje: mensaje.trim(),
         fecha: admin.firestore.Timestamp.now(),
         status: "nuevo",

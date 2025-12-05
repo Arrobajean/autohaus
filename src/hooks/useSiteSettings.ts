@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { SEOSettings, HomepageSettings, SiteSettings } from '@/types';
+import { SEOSettings, HomepageSettings, SiteSettings, EmailSettings } from '@/types';
 import { toast } from 'sonner';
 
 const DEFAULT_SEO: SEOSettings = {
@@ -30,45 +30,62 @@ const DEFAULT_HOMEPAGE: HomepageSettings = {
   },
 };
 
+const DEFAULT_EMAILS: EmailSettings = {
+  contactEmail: '',
+  callbackEmail: '',
+};
+
 export const useSiteSettings = () => {
   const [seoSettings, setSeoSettings] = useState<SEOSettings>(DEFAULT_SEO);
   const [homepageSettings, setHomepageSettings] = useState<HomepageSettings>(DEFAULT_HOMEPAGE);
+  const [emailSettings, setEmailSettings] = useState<EmailSettings>(DEFAULT_EMAILS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      if (!db) {
-        setLoading(false);
-        return;
-      }
+    if (!db) {
+      setLoading(false);
+      return;
+    }
 
-      try {
-        const settingsRef = doc(db, 'settings', 'site');
-        const settingsDoc = await getDoc(settingsRef);
-
-        if (settingsDoc.exists()) {
-          const data = settingsDoc.data() as SiteSettings;
-          setSeoSettings(data.seo || DEFAULT_SEO);
-          setHomepageSettings(data.homepage || DEFAULT_HOMEPAGE);
-        } else {
-          // Crear documento con valores por defecto si no existe
-          await setDoc(settingsRef, {
-            seo: DEFAULT_SEO,
-            homepage: DEFAULT_HOMEPAGE,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          });
+    const settingsRef = doc(db, 'settings', 'site');
+    
+    // Listener en tiempo real para actualizaciones automáticas
+    const unsubscribe = onSnapshot(
+      settingsRef,
+      async (snapshot) => {
+        try {
+          if (snapshot.exists()) {
+            const data = snapshot.data() as SiteSettings;
+            setSeoSettings(data.seo || DEFAULT_SEO);
+            setHomepageSettings(data.homepage || DEFAULT_HOMEPAGE);
+            setEmailSettings(data.emails || DEFAULT_EMAILS);
+          } else {
+            // Crear documento con valores por defecto si no existe
+            await setDoc(settingsRef, {
+              seo: DEFAULT_SEO,
+              homepage: DEFAULT_HOMEPAGE,
+              emails: DEFAULT_EMAILS,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+            });
+          }
+        } catch (error) {
+          console.error('Error processing site settings:', error);
+          toast.error('Error al cargar la configuración');
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Error fetching site settings:', error);
+      },
+      (error) => {
+        console.error('Error listening to site settings:', error);
         toast.error('Error al cargar la configuración');
-      } finally {
         setLoading(false);
       }
-    };
+    );
 
-    fetchSettings();
+    // Cleanup: desuscribirse cuando el componente se desmonte
+    return () => unsubscribe();
   }, []);
 
   const updateSEOSettings = async (newSeoSettings: Partial<SEOSettings>) => {
@@ -87,6 +104,7 @@ export const useSiteSettings = () => {
         {
           seo: updatedSeo,
           homepage: homepageSettings,
+          emails: emailSettings,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
@@ -120,6 +138,7 @@ export const useSiteSettings = () => {
         {
           seo: seoSettings,
           homepage: updatedHomepage,
+          emails: emailSettings,
           updatedAt: serverTimestamp(),
         },
         { merge: true }
@@ -137,13 +156,49 @@ export const useSiteSettings = () => {
     }
   };
 
+  const updateEmailSettings = async (newEmailSettings: Partial<EmailSettings>) => {
+    if (!db) {
+      toast.error('Firebase no está configurado');
+      return false;
+    }
+
+    setSaving(true);
+    try {
+      const settingsRef = doc(db, 'settings', 'site');
+      const updatedEmails = { ...emailSettings, ...newEmailSettings };
+      
+      await setDoc(
+        settingsRef,
+        {
+          seo: seoSettings,
+          homepage: homepageSettings,
+          emails: updatedEmails,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      setEmailSettings(updatedEmails);
+      toast.success('Configuración de emails actualizada correctamente');
+      return true;
+    } catch (error) {
+      console.error('Error updating email settings:', error);
+      toast.error('Error al actualizar la configuración de emails');
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return {
     seoSettings,
     homepageSettings,
+    emailSettings,
     loading,
     saving,
     updateSEOSettings,
     updateHomepageSettings,
+    updateEmailSettings,
   };
 };
 

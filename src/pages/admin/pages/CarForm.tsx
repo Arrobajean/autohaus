@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCarForm } from "@/hooks/useCarForm";
-import { BasicInfoFields } from "./CarForm/components/BasicInfoFields";
-import { DescriptionAndFeatured } from "./CarForm/components/DescriptionAndFeatured";
-import { TechnicalSpecs } from "./CarForm/components/TechnicalSpecs";
-import { ImageGallery } from "./CarForm/components/ImageGallery";
-import { FormActions } from "./CarForm/components/FormActions";
+import { BasicInfoFields } from "../features/car-form/components/BasicInfoFields";
+import { DescriptionAndFeatured } from "../features/car-form/components/DescriptionAndFeatured";
+import { TechnicalSpecs } from "../features/car-form/components/TechnicalSpecs";
+import { ImageGallery } from "../features/car-form/components/ImageGallery";
+import { FormActions } from "../features/car-form/components/FormActions";
 
 const CarForm = () => {
   const {

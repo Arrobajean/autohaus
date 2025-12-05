@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
-import { getUserInitials, getUserName, getUserPhotoURL } from "../../helpers/userHelpers";
+import { getUserInitials, getUserName, getUserPhotoURL } from "../../features/users/helpers/userHelpers";
 
 interface SidebarContentProps {
   sidebarLinks: Array<{ label: string; href: string; iconKey: string }>;

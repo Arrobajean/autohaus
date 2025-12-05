@@ -65,7 +65,13 @@ export interface HomepageSettings {
   sectionsEnabled: HomepageSectionsEnabled;
 }
 
+export interface EmailSettings {
+  contactEmail: string; // Email para contactos generales
+  callbackEmail: string; // Email para callbacks (solicitudes de llamada)
+}
+
 export interface SiteSettings {
   seo: SEOSettings;
   homepage: HomepageSettings;
+  emails?: EmailSettings;
 }

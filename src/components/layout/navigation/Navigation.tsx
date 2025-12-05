@@ -22,16 +22,20 @@ const Navigation = memo(() => {
 
   const getNavAnimationProps = () => {
     const shouldShowWhiteBackground = isWhitePage || isScrolled;
+
+    // Usar valores RGBA consistentes para mejor interpolación en móvil
     const backgroundColor = shouldShowWhiteBackground
       ? isMdUp
-        ? "transparent"
-        : "rgba(255, 255, 255, 1)"
-      : "transparent";
+        ? "rgba(255, 255, 255, 0)" // transparent para desktop
+        : "rgba(255, 255, 255, 1)" // blanco sólido para móvil
+      : "rgba(255, 255, 255, 0)"; // transparent
+
     const borderBottomColor = shouldShowWhiteBackground
       ? isMdUp
-        ? "transparent"
-        : "rgba(229, 231, 235, 1)"
-      : "transparent";
+        ? "rgba(229, 231, 235, 0)" // transparent para desktop
+        : "rgba(229, 231, 235, 1)" // gris para móvil
+      : "rgba(229, 231, 235, 0)"; // transparent
+
     const borderBottomWidth = shouldShowWhiteBackground ? (isMdUp ? 0 : 1) : 0;
 
     return {
@@ -43,6 +47,22 @@ const Navigation = memo(() => {
 
   const navAnimationProps = getNavAnimationProps();
 
+  // Estado inicial: siempre transparente en RGBA para mejor interpolación
+  const initialBackgroundColor = "rgba(255, 255, 255, 0)";
+  const initialBorderColor = "rgba(229, 231, 235, 0)";
+
+  // Transición coordinada: 800ms para todos los elementos en móvil
+  const transition = isMdUp
+    ? {
+        opacity: { duration: 1.0, delay: 0.1 },
+        backgroundColor: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const },
+        borderBottomColor: { duration: 0.3, ease: [0.4, 0, 0.2, 1] as const },
+      }
+    : {
+        backgroundColor: { duration: 0.8, ease: [0.4, 0, 0.2, 1] as const },
+        borderBottomColor: { duration: 0.8, ease: [0.4, 0, 0.2, 1] as const },
+      };
+
   return (
     <>
       <SkipLink />
@@ -51,17 +71,24 @@ const Navigation = memo(() => {
         role="navigation"
         aria-label="Navegación principal"
         className="fixed top-0 left-0 right-0 z-50 md:backdrop-blur-sm"
-        initial={isMdUp ? { opacity: 0 } : false}
+        initial={
+          isMdUp
+            ? {
+                opacity: 0,
+                backgroundColor: initialBackgroundColor,
+                borderBottomColor: initialBorderColor,
+              }
+            : {
+                backgroundColor: initialBackgroundColor,
+                borderBottomColor: initialBorderColor,
+              }
+        }
         animate={{
           opacity: isMdUp ? 1 : undefined,
           backgroundColor: navAnimationProps.backgroundColor,
           borderBottomColor: navAnimationProps.borderBottomColor,
         }}
-        transition={{
-          opacity: isMdUp ? { duration: 1.0, delay: 0.1 } : undefined,
-          backgroundColor: { duration: 0.8, ease: "easeInOut" },
-          borderBottomColor: { duration: 0.8, ease: "easeInOut" },
-        }}
+        transition={transition}
         style={{
           borderBottomWidth: navAnimationProps.borderBottomWidth,
         }}

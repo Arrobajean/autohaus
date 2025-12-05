@@ -2,8 +2,8 @@ import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import RollingTextButton from "@/components/common/RollingTextButton";
 import { IoLogoWhatsapp, IoMail } from "react-icons/io5";
-import { useWhatsApp } from "@/hooks/useWhatsApp";
 import { navigationItems } from "./Navigation.constants";
+import { useMobileMenu } from "./useMobileMenu";
 
 // Skip link component for accessibility
 export const SkipLink = () => (
@@ -41,50 +41,58 @@ export const MobileMenuButton = ({
   isOpen,
   onClick,
   textColor,
-}: MobileMenuButtonProps) => (
-  <button
-    className={`p-2 -mr-2 transition-colors duration-300 absolute right-0 z-[60] ${textColor}`}
-    onClick={onClick}
-    aria-label="Toggle menu"
-    aria-expanded={isOpen}
-  >
-    <motion.svg
-      className="w-6 h-6"
-      fill="none"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      initial={false}
-      animate={{ rotate: isOpen ? 90 : 0 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+}: MobileMenuButtonProps) => {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    onClick();
+  };
+
+  return (
+    <button
+      className={`p-2 -mr-2 transition-colors duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] absolute right-0 z-[60] ${textColor}`}
+      onClick={handleClick}
+      aria-label="Toggle menu"
+      aria-expanded={isOpen}
+      type="button"
     >
-      <AnimatePresence mode="wait">
-        {isOpen ? (
-          <motion.path
-            key="close"
-            d="M6 18L18 6M6 6l12 12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          />
-        ) : (
-          <motion.g
-            key="menu"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <path d="M4 6h16M4 12h16M4 18h16" />
-          </motion.g>
-        )}
-      </AnimatePresence>
-    </motion.svg>
-  </button>
-);
+      <motion.svg
+        className="w-6 h-6"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        initial={false}
+        animate={{ rotate: isOpen ? 90 : 0 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        <AnimatePresence mode="wait">
+          {isOpen ? (
+            <motion.path
+              key="close"
+              d="M6 18L18 6M6 6l12 12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            />
+          ) : (
+            <motion.g
+              key="menu"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </motion.g>
+          )}
+        </AnimatePresence>
+      </motion.svg>
+    </button>
+  );
+};
 
 interface DesktopNavigationProps {
   isScrolled: boolean;
@@ -129,9 +137,7 @@ export const DesktopNavigation = ({
               : "rgba(255, 255, 255, 0.7)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = isScrolled
-              ? "#000000"
-              : "#ffffff";
+            e.currentTarget.style.color = isScrolled ? "#000000" : "#ffffff";
           }}
         >
           {item.label}
@@ -140,7 +146,7 @@ export const DesktopNavigation = ({
     </div>
 
     {/* CTA Button - Right */}
-    <div className="flex justify-end items-center min-w-0">
+    <div className="flex justify-end items-center min-w-fit">
       <NavCtaButton isScrolled={isScrolled} />
     </div>
   </div>
@@ -161,11 +167,8 @@ export const MobileNavigation = ({
   onLogoClick,
   onMenuToggle,
 }: MobileNavigationProps) => {
-  const { handleWhatsAppClick } = useWhatsApp();
   const textColor =
-    isScrolled || isWhitePage || mobileMenuOpen
-      ? "text-black"
-      : "text-white";
+    isScrolled || isWhitePage || mobileMenuOpen ? "text-black" : "text-white";
 
   return (
     <div className="md:hidden flex items-center justify-center w-full relative">
@@ -176,7 +179,7 @@ export const MobileNavigation = ({
         onClick={onLogoClick}
       >
         <span
-          className={`text-lg font-semibold tracking-wide transition-colors duration-300 ${textColor}`}
+          className={`text-lg font-semibold tracking-wide transition-colors duration-[800ms] ease-[cubic-bezier(0.4,0,0.2,1)] ${textColor}`}
         >
           AutoHaus
         </span>
@@ -205,8 +208,14 @@ export const MobileMenu = ({
   isWhitePage,
   onClose,
 }: MobileMenuProps) => {
-  const { handleWhatsAppClick } = useWhatsApp();
   const menuTop = isScrolled || isWhitePage ? "top-[70px]" : "top-0";
+
+  const {
+    handleLinkClick,
+    handleBackdropClick,
+    handleWhatsAppClickWithClose,
+    handleEmailClick,
+  } = useMobileMenu({ isOpen, onClose });
 
   return (
     <AnimatePresence>
@@ -215,7 +224,7 @@ export const MobileMenu = ({
           {/* Backdrop */}
           <motion.div
             className={`fixed inset-0 bg-white backdrop-blur-lg md:hidden z-40 ${menuTop}`}
-            onClick={onClose}
+            onClick={handleBackdropClick}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -229,6 +238,7 @@ export const MobileMenu = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="h-full flex flex-col items-center justify-center px-6 pointer-events-auto">
               {/* Navigation Links - Centered */}
@@ -258,7 +268,7 @@ export const MobileMenu = ({
                     <Link
                       to={item.pagePath}
                       className="text-2xl font-bold text-black hover:text-black/70 transition-colors duration-200 text-center block"
-                      onClick={onClose}
+                      onClick={handleLinkClick}
                     >
                       {item.label}
                     </Link>
@@ -295,10 +305,7 @@ export const MobileMenu = ({
                 <div className="flex justify-center items-center gap-6">
                   {/* WhatsApp */}
                   <button
-                    onClick={() => {
-                      handleWhatsAppClick();
-                      onClose();
-                    }}
+                    onClick={handleWhatsAppClickWithClose}
                     className="flex items-center gap-2 text-black hover:text-black/70 transition-colors duration-200"
                     aria-label="Contactar por WhatsApp"
                   >
@@ -309,6 +316,7 @@ export const MobileMenu = ({
                   {/* Email */}
                   <a
                     href="mailto:info@autohaus.com"
+                    onClick={handleEmailClick}
                     className="flex items-center gap-2 text-black hover:text-black/70 transition-colors duration-200"
                     aria-label="Enviar correo electrónico"
                   >
@@ -324,4 +332,3 @@ export const MobileMenu = ({
     </AnimatePresence>
   );
 };
-

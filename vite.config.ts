@@ -9,19 +9,17 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  plugins: [
-    react(),
-    mode === 'development' &&
-    componentTagger(),
-  ].filter(Boolean),
+  plugins: [react(), mode === "development" && componentTagger()].filter(
+    Boolean
+  ),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
   build: {
-    target: 'esnext',
-    minify: 'esbuild',
+    target: "esnext",
+    minify: "esbuild",
     cssMinify: true,
     sourcemap: false,
     commonjsOptions: {
@@ -30,24 +28,29 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          if (id.includes('node_modules')) {
+          if (id.includes("node_modules")) {
             // Firebase separado (grande y no depende de React)
-            if (id.includes('firebase')) {
-              return 'firebase-vendor';
+            if (id.includes("firebase")) {
+              return "firebase-vendor";
             }
             // Animaciones separadas (grandes y no dependen de React)
-            if (id.includes('framer-motion') || id.includes('gsap') || id.includes('lenis')) {
-              return 'animation-vendor';
+            if (
+              id.includes("framer-motion") ||
+              id.includes("gsap") ||
+              id.includes("lenis")
+            ) {
+              return "animation-vendor";
             }
             // Todo lo demás (incluyendo React y sus dependencias) va junto
             // Vite manejará automáticamente las dependencias de React correctamente
-            return 'vendor';
+            return "vendor";
           }
         },
-        chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
+        chunkFileNames: "assets/js/[name]-[hash].js",
+        entryFileNames: "assets/js/[name]-[hash].js",
         assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.');
+          const fileName = assetInfo.names?.[0] || "";
+          const info = fileName.split(".");
           const ext = info[info.length - 1];
           if (/png|jpe?g|svg|gif|tiff|bmp|ico|avif|webp/i.test(ext)) {
             return `assets/images/[name]-[hash][extname]`;
@@ -63,17 +66,17 @@ export default defineConfig(({ mode }) => ({
   },
   optimizeDeps: {
     include: [
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      'react-router-dom',
-      'firebase/app',
-      'firebase/firestore',
-      'firebase/auth',
-      'firebase/storage'
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react-router-dom",
+      "firebase/app",
+      "firebase/firestore",
+      "firebase/auth",
+      "firebase/storage",
     ],
     esbuildOptions: {
-      target: 'esnext',
+      target: "esnext",
     },
   },
 }));

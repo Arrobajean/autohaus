@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Navigation from "./Navigation";
+import Navigation from "./navigation";
 import Footer from "./Footer";
 import { PageTransition } from "@/components/common/PageTransition";
 

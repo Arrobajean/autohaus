@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { AuthProvider } from "@/context/AuthContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/routing";
 import { useLenis } from "@/hooks";
 import { ScrollToTop } from "@/components/common/ScrollToTop";
 
@@ -21,14 +21,14 @@ const Services = lazy(() => import("@/pages/site/services"));
 const About = lazy(() => import("@/pages/site/about"));
 
 // Lazy load admin pages
-const Login = lazy(() => import("@/pages/admin/Login"));
-const AdminLayout = lazy(() => import("@/pages/admin/Layout"));
-const Dashboard = lazy(() => import("@/pages/admin/Dashboard"));
-const UsersList = lazy(() => import("@/pages/admin/Users"));
-const CarsList = lazy(() => import("@/pages/admin/Cars"));
-const CarForm = lazy(() => import("@/pages/admin/CarForm"));
-const Settings = lazy(() => import("@/pages/admin/Settings"));
-const Profile = lazy(() => import("@/pages/admin/Profile"));
+const Login = lazy(() => import("@/pages/admin/pages/Login"));
+const AdminLayout = lazy(() => import("@/pages/admin/layout/Layout"));
+const Dashboard = lazy(() => import("@/pages/admin/pages/Dashboard"));
+const UsersList = lazy(() => import("@/pages/admin/pages/Users"));
+const CarsList = lazy(() => import("@/pages/admin/pages/Cars"));
+const CarForm = lazy(() => import("@/pages/admin/pages/CarForm"));
+const Settings = lazy(() => import("@/pages/admin/pages/Settings"));
+const Profile = lazy(() => import("@/pages/admin/pages/Profile"));
 
 // Loading fallback component
 const PageLoader = () => (

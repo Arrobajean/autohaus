@@ -10,7 +10,7 @@ import {
   updateCarFeaturedStatus,
   canAddFeaturedCar,
   getMaxFeaturedCars,
-} from "@/pages/admin/helpers/dashboardHelpers";
+} from "@/pages/admin/features/dashboard/helpers/dashboardHelpers";
 
 interface DashboardStats {
   totalCars: number;
@@ -192,4 +192,3 @@ export const useDashboard = () => {
     refreshStats: loadStats,
   };
 };
-

@@ -29,9 +29,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useCarsList } from "./hooks/useCarsList";
-import { SortIcon } from "./Cars/components/SortIcon";
-import { StatusFilter } from "./helpers/carsListHelpers";
+import { useCarsList } from "../features/cars/hooks/useCarsList";
+import { SortIcon } from "../features/cars/components/SortIcon";
+import { StatusFilter } from "../features/cars/helpers/carsListHelpers";
 
 const CarsList = () => {
   const {

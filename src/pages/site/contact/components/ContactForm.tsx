@@ -1,5 +1,5 @@
 import { useContactForm } from "../hooks/useContactForm";
-import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
+import { Checkbox } from "@/components/ui/radix/checkbox";
 
 const ContactForm = () => {
   const {
@@ -31,7 +31,7 @@ const ContactForm = () => {
             required
             autoComplete="name"
             className="w-full px-4 py-3 border-0 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all"
-            style={{ backgroundColor: '#E0E0E0' }}
+            style={{ backgroundColor: "#E0E0E0" }}
             placeholder="Juan Pérez"
           />
         </div>
@@ -52,7 +52,7 @@ const ContactForm = () => {
             required
             autoComplete="tel"
             className="w-full px-4 py-3 border-0 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all"
-            style={{ backgroundColor: '#E0E0E0' }}
+            style={{ backgroundColor: "#E0E0E0" }}
             placeholder="+34 600 123 456"
           />
         </div>
@@ -73,7 +73,7 @@ const ContactForm = () => {
             required
             autoComplete="email"
             className="w-full px-4 py-3 border-0 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all"
-            style={{ backgroundColor: '#E0E0E0' }}
+            style={{ backgroundColor: "#E0E0E0" }}
             placeholder="juan@ejemplo.com"
           />
         </div>
@@ -94,7 +94,7 @@ const ContactForm = () => {
             rows={4}
             autoComplete="off"
             className="w-full px-4 py-3 border-0 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 resize-none transition-all text-wrap-safe"
-            style={{ backgroundColor: '#E0E0E0' }}
+            style={{ backgroundColor: "#E0E0E0" }}
             placeholder="Cuéntanos en qué podemos ayudarte..."
           />
         </div>
@@ -135,4 +135,3 @@ const ContactForm = () => {
 };
 
 export default ContactForm;
-
