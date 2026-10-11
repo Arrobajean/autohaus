@@ -11,6 +11,13 @@ import * as functions from "firebase-functions/v1";
 import * as admin from "firebase-admin";
 import nodemailer from "nodemailer";
 import { QueryDocumentSnapshot } from "firebase-functions/v1/firestore";
+import { defineSecret, defineString } from "firebase-functions/params";
+import {
+  renderContactEmail,
+  renderCallbackEmail,
+  isValidContact,
+  isValidCallback,
+} from "./lib/email";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -28,13 +35,43 @@ import { QueryDocumentSnapshot } from "firebase-functions/v1/firestore";
 
 admin.initializeApp();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: functions.config().gmail.email,
-    pass: functions.config().gmail.pass,
-  },
-});
+// Configuracion migrada a params con fallback a Runtime Config (obsoleto).
+// El usuario debe fijar: firebase functions:secrets:set GMAIL_PASS
+// y GMAIL_EMAIL / CONTACT_EMAIL via `firebase functions:config` nuevo o .env.
+// Mientras tanto, si los params estan vacios se usa functions.config().
+const GMAIL_EMAIL = defineString("GMAIL_EMAIL", { default: "" });
+const GMAIL_PASS = defineSecret("GMAIL_PASS");
+const CONTACT_EMAIL = defineString("CONTACT_EMAIL", { default: "" });
+const CALLBACK_EMAIL = defineString("CALLBACK_EMAIL", { default: "" });
+
+function legacyConfig(): any {
+  try {
+    return functions.config();
+  } catch {
+    return {};
+  }
+}
+
+function getMailUser(): string {
+  return GMAIL_EMAIL.value() || legacyConfig().gmail?.email || "";
+}
+
+function getMailPass(): string {
+  try {
+    const v = GMAIL_PASS.value();
+    if (v) return v;
+  } catch {
+    // secreto no fijado: fallback legacy
+  }
+  return legacyConfig().gmail?.pass || "";
+}
+
+function getTransporter() {
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: getMailUser(), pass: getMailPass() },
+  });
+}
 
 /**
  * @param {import('firebase-functions').firestore.QueryDocumentSnapshot} snap
@@ -44,56 +81,38 @@ export const sendContactEmail = functions.firestore
   .document("contactos/{contactId}")
   .onCreate(async (snap: QueryDocumentSnapshot, context) => {
     const data = snap.data();
-    
+
+    // Validar y recortar antes de enviar; descartar spam/documentos malformados
+    if (!isValidContact(data)) {
+      console.warn("contactos: documento invalido, se descarta sin enviar email.");
+      return null;
+    }
+
     // Obtener email de destino desde Firestore
-    let toEmail = functions.config().gmail.email; // Fallback
+    let toEmail = getMailUser(); // Fallback
     try {
       const settingsDoc = await admin.firestore().doc("settings/site").get();
-      if (settingsDoc.exists()) {
+      if (settingsDoc.exists) {
         const settings = settingsDoc.data();
-        toEmail = settings?.emails?.contactEmail || functions.config().contact?.email || functions.config().gmail.email;
+        toEmail =
+          settings?.emails?.contactEmail ||
+          CONTACT_EMAIL.value() ||
+          legacyConfig().contact?.email ||
+          getMailUser();
       }
     } catch (error) {
       console.error("Error obteniendo configuración de emails:", error);
     }
-    
+
+    const rendered = renderContactEmail(data);
     const mailOptions = {
-      from: functions.config().gmail.email,
+      from: getMailUser(),
       to: toEmail,
-      subject: "Nuevo contacto desde AutoHaus",
-      text: `
-        Nuevo contacto desde la web de AutoHaus
-        
-        Nombre: ${data?.nombre || data?.name}
-        Email: ${data?.email || ""}
-        Teléfono: ${data?.telefono || data?.phone || ""}
-        Mensaje: ${data?.mensaje || data?.message || ""}
-        Fecha: ${
-          data?.fecha
-            ? data.fecha.toDate
-              ? data.fecha.toDate().toLocaleString()
-              : data.fecha
-            : ""
-        }
-        UserAgent: ${data?.userAgent || ""}
-      `,
-      html: `
-        <h2>Nuevo contacto desde AutoHaus</h2>
-        <p><strong>Nombre:</strong> ${data?.nombre || data?.name}</p>
-        <p><strong>Email:</strong> ${data?.email || ""}</p>
-        <p><strong>Teléfono:</strong> ${data?.telefono || data?.phone || ""}</p>
-        <p><strong>Mensaje:</strong> ${data?.mensaje || data?.message || ""}</p>
-        <p><strong>Fecha:</strong> ${
-          data?.fecha
-            ? data.fecha.toDate
-              ? data.fecha.toDate().toLocaleString()
-              : data.fecha
-            : ""
-        }</p>
-        <p><strong>UserAgent:</strong> ${data?.userAgent || ""}</p>
-      `,
+      subject: rendered.subject,
+      text: rendered.text,
+      html: rendered.html,
     };
-    await transporter.sendMail(mailOptions);
+    await getTransporter().sendMail(mailOptions);
     return null;
   });
 
@@ -101,57 +120,39 @@ export const sendCallbackEmail = functions.firestore
   .document("callbacks/{callbackId}")
   .onCreate(async (snap, context) => {
     const data = snap.data();
-    
+
+    if (!isValidCallback(data)) {
+      console.warn("callbacks: documento invalido, se descarta sin enviar email.");
+      return null;
+    }
+
     // Obtener email de destino desde Firestore
-    let toEmail = functions.config().gmail.email; // Fallback
+    let toEmail = getMailUser(); // Fallback
     try {
       const settingsDoc = await admin.firestore().doc("settings/site").get();
-      if (settingsDoc.exists()) {
+      if (settingsDoc.exists) {
         const settings = settingsDoc.data();
-        toEmail = settings?.emails?.callbackEmail || 
-                  functions.config().contact?.callback_to ||
-                  functions.config().contact?.email || 
-                  functions.config().gmail.email;
+        toEmail =
+          settings?.emails?.callbackEmail ||
+          CALLBACK_EMAIL.value() ||
+          CONTACT_EMAIL.value() ||
+          legacyConfig().contact?.callback_to ||
+          legacyConfig().contact?.email ||
+          getMailUser();
       }
     } catch (error) {
       console.error("Error obteniendo configuración de emails:", error);
     }
-    
+
+    const rendered = renderCallbackEmail(data);
     const mailOptions = {
-      from: functions.config().gmail.email,
+      from: getMailUser(),
       to: toEmail,
-      subject: "Nueva solicitud de callback - AutoHaus",
-      text: `
-        Nueva solicitud de callback desde AutoHaus
-        
-        Nombre: ${data?.nombre || data?.name}
-        Teléfono: ${data?.telefono || data?.phone || ""}
-        Mensaje: ${data?.mensaje || data?.message || ""}
-        Fecha: ${
-          data?.fecha
-            ? data.fecha.toDate
-              ? data.fecha.toDate().toLocaleString()
-              : data.fecha
-            : ""
-        }
-        UserAgent: ${data?.userAgent || ""}
-      `,
-      html: `
-        <h2>Nueva solicitud de callback - AutoHaus</h2>
-        <p><strong>Nombre:</strong> ${data?.nombre || data?.name}</p>
-        <p><strong>Teléfono:</strong> ${data?.telefono || data?.phone || ""}</p>
-        <p><strong>Mensaje:</strong> ${data?.mensaje || data?.message || ""}</p>
-        <p><strong>Fecha:</strong> ${
-          data?.fecha
-            ? data.fecha.toDate
-              ? data.fecha.toDate().toLocaleString()
-              : data.fecha
-            : ""
-        }</p>
-        <p><strong>UserAgent:</strong> ${data?.userAgent || ""}</p>
-      `,
+      subject: rendered.subject,
+      text: rendered.text,
+      html: rendered.html,
     };
-    await transporter.sendMail(mailOptions);
+    await getTransporter().sendMail(mailOptions);
     return null;
   });
 

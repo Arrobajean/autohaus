@@ -1,7 +1,10 @@
 const ContactMap = () => {
   const address = "Calle de Serrano 87, 28006 Madrid, España";
   const encodedAddress = encodeURIComponent(address);
-  const mapUrl = `https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6d_s6X4cuYZ1_T8&q=${encodedAddress}`;
+  // NOTA (S4): la clave de Maps Embed vivia hardcodeada aqui y el iframe ni
+  // la usaba (usa output=embed sin key). Si algun dia se usa la Embed API,
+  // ponerla en VITE_GOOGLE_MAPS_EMBED_KEY (Vercel) y restringirla en Cloud
+  // Console a los dominios propios + solo "Maps Embed API".
 
   return (
     <section className="px-4 md:px-8 mt-8 md:mt-16">

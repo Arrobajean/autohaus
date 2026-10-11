@@ -1,23 +1,42 @@
 rules_version = '2';
+
+// ============================================================================
+// Reglas de Storage — AutoHaus
+//
+//  - `cars/**`: lectura publica (fotos del inventario); escritura solo admin
+//    con imagen <= 10 MB (ruta real: cars/${Date.now()}_nombre en
+//    useCarImages.ts).
+//  - `settings/**`: lectura publica (og/favicon del sitio); escritura solo
+//    admin con imagen <= 10 MB (rutas reales: settings/og, settings/favicon).
+//  - Resto: denegado.
+//
+// El claim se lee igual que en Firestore: request.auth.token.admin == true.
+// Desplegar con: firebase deploy --only storage --project <id>
+// ============================================================================
 service firebase.storage {
   match /b/{bucket}/o {
-    // Carpeta de imágenes de coches
-    match /cars/{imageId} {
-      // Permitir lectura pública (para mostrar en la web)
-      allow read: if true;
-      
-      // Permitir escritura pública (sin restricciones)
-      allow write: if true;
-      
-      // Opcional: Limitar tamaño y tipo de archivo
-      // allow write: if request.resource.size < 10 * 1024 * 1024 // 10MB
-      //   && request.resource.contentType.matches('image/.*');
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
     }
-    
-    // Cualquier otra carpeta (por si necesitas más adelante)
+
+    function isImage10MB() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < 10 * 1024 * 1024;
+    }
+
+    match /cars/{all=**} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage10MB();
+    }
+
+    match /settings/{all=**} {
+      allow read: if true;
+      allow write: if isAdmin() && isImage10MB();
+    }
+
     match /{allPaths=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
-

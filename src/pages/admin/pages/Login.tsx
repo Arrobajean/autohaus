@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider, db } from '@/lib/firebase';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, googleProvider } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,30 +15,11 @@ const Login = () => {
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const navigate = useNavigate();
 
-  const createUserProfile = async (user: any) => {
-    if (!db) return;
-
-    try {
-      const userRef = doc(db, 'users', user.uid);
-      const userDoc = await getDoc(userRef);
-
-      if (!userDoc.exists()) {
-        // Crear perfil de usuario si no existe
-        const userProfile = {
-          uid: user.uid,
-          email: user.email || '',
-          role: 'editor' as const, // Por defecto editor, el admin puede cambiarlo después
-          displayName: user.displayName || user.email?.split('@')[0] || 'Usuario',
-          createdAt: serverTimestamp(),
-        };
-
-        await setDoc(userRef, userProfile);
-        toast.success('Perfil de usuario creado');
-      }
-    } catch (error: any) {
-      console.error('Error creando perfil de usuario:', error);
-      // No mostramos error al usuario porque la autenticación fue exitosa
-    }
+  const createUserProfile = async (_user: unknown) => {
+    // Intencionadamente vacio: el cliente nunca crea `users/{uid}`.
+    // Un admin asigna el claim con scripts/set-admin-claim.mjs; AuthContext
+    // lee el acceso desde el token, no desde un rol auto-asignado.
+    return;
   };
 
   const handleLogin = async (e: React.FormEvent) => {

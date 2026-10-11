@@ -1,11 +1,105 @@
 rules_version = '2';
+
+// ============================================================================
+// Reglas de seguridad de Firestore — AutoHaus
+//
+// Modelo de permisos:
+//  - Publico: lee `cars` y `settings/public`; crea `callbacks` validados.
+//  - Admin: usuario autenticado con custom claim `admin: true`
+//    (asignar con: node scripts/set-admin-claim.mjs correo@dominio.com).
+//  - `contactos` y `contacto_envios` SIN escritura publica: el formulario de
+//    contacto del cliente (useContactForm) hoy NO escribe en Firestore; el
+//    unico escritor es `contactFormHandler` (HTTPS, Admin SDK) que no pasa
+//    por estas reglas. Dejar el create abierto solo serviria para spam.
+//  - `settings/site` (legado, contiene emails privados) solo admin: el sitio
+//    publico debe migrar a `settings/public` (SEO/homepage sin emails).
+//
+// Desplegar con: firebase deploy --only firestore:rules --project <id>
+// ============================================================================
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Reglas públicas: lectura y escritura permitidas para todos
-    // Útil para desarrollo y aplicaciones de uso interno
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    function str(v, max) {
+      return v is string && v.size() > 0 && v.size() <= max;
+    }
+
+    // ------------------------------------------------------------------
+    // CARS: inventario publico; escritura solo admin.
+    // El cliente filtra where(status == "available").
+    // ------------------------------------------------------------------
+    match /cars/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // SETTINGS: `settings/public` (seo/homepage, sin emails) lectura
+    // publica; `settings/site` (legado con emails) y `settings/private`
+    // solo admin. Migrar useSiteSettings a `settings/public` + `private`.
+    // ------------------------------------------------------------------
+    match /settings/{doc} {
+      allow read: if doc == 'public';
+      allow read, write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // USERS: cada cuenta lee SU propio doc; escritura solo admin.
+    // El cliente NO debe auto-crear perfiles con role 'editor' (ver S2).
+    // ------------------------------------------------------------------
+    match /users/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // CALLBACKS: el modal escribe {name, phone, message, fecha, status,
+    // userAgent} (ver CallbackModal.tsx). Solo create validado; leer/
+    // actualizar/borrar solo admin.
+    // ------------------------------------------------------------------
+    match /callbacks/{id} {
+      allow create: if request.resource.data.keys().hasOnly(
+                      ['name', 'phone', 'message', 'fecha', 'status', 'userAgent']
+                    )
+                    && str(request.resource.data.name, 120)
+                    && request.resource.data.name.size() >= 2
+                    && str(request.resource.data.phone, 30)
+                    && request.resource.data.phone.matches('^[0-9\\s\\-\\+]{7,30}$')
+                    && (!('message' in request.resource.data)
+                        || (request.resource.data.message is string
+                            && request.resource.data.message.size() <= 2000))
+                    && request.resource.data.fecha is timestamp
+                    && request.resource.data.status == 'nuevo'
+                    && (!('userAgent' in request.resource.data)
+                        || (request.resource.data.userAgent is string
+                            && request.resource.data.userAgent.size() <= 1000));
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // CONTACTOS: sin escritura publica (ver cabecera). Lectura/escritura
+    // solo admin; el escritor real es Admin SDK via contactFormHandler.
+    // ------------------------------------------------------------------
+    match /contactos/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // CONTACTO_ENVIOS: rate-limit interno de contactFormHandler (Admin SDK).
+    // Sin acceso de cliente.
+    // ------------------------------------------------------------------
+    match /contacto_envios/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------
+    // Por defecto, denegar todo lo no listado.
+    // ------------------------------------------------------------------
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }
-

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { UserProfile } from '@/types';
 
 interface AuthContextType {
@@ -23,6 +23,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,34 +35,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
-      
+
+      // El rol sale del custom claim `admin`, no del documento `users/{uid}`.
+      // El cliente nunca crea perfiles: solo un admin (via consola o script
+      // scripts/set-admin-claim.mjs + documento en `users/`) puede dar acceso.
+      let adminClaim = false;
+      if (firebaseUser) {
+        try {
+          const token = await firebaseUser.getIdTokenResult();
+          adminClaim = token.claims.admin === true;
+        } catch (error) {
+          console.error("Error leyendo custom claims:", error);
+        }
+        setIsAdmin(adminClaim);
+      } else {
+        setIsAdmin(false);
+      }
+
       if (firebaseUser && db) {
         try {
           const userRef = doc(db, 'users', firebaseUser.uid);
           const userDoc = await getDoc(userRef);
-          
+
           if (userDoc.exists()) {
             setUserProfile(userDoc.data() as UserProfile);
           } else {
-            // Crear perfil automáticamente si no existe (útil para autenticación con Google)
-            const newUserProfile: UserProfile = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email || '',
-              role: 'editor', // Por defecto editor
-              displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Usuario',
-              createdAt: new Date(),
-            };
-
-            try {
-              await setDoc(userRef, {
-                ...newUserProfile,
-                createdAt: serverTimestamp(),
-              });
-              setUserProfile(newUserProfile);
-            } catch (createError) {
-              console.error("Error creando perfil de usuario:", createError);
-              setUserProfile(null);
-            }
+            // Sin perfil: sin acceso al panel aunque haya sesion.
+            // Un admin debe crear `users/{uid}` o asignar el claim.
+            setUserProfile(null);
           }
         } catch (error) {
           console.error("Error fetching user profile:", error);
@@ -70,14 +71,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setUserProfile(null);
       }
-      
+
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
-
-  const isAdmin = userProfile?.role === 'admin';
 
   return (
     <AuthContext.Provider value={{ user, userProfile, loading, isAdmin }}>
