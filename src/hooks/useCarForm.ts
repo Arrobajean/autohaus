@@ -4,8 +4,8 @@ import { doc, getDoc, addDoc, updateDoc, collection, serverTimestamp } from "fir
 import { db } from "@/lib/firebase";
 import { Car } from "@/types";
 import { toast } from "sonner";
-import { getDefaultCarFormData, createPreviewCar, validateCarForm } from "@/pages/admin/helpers/carFormHelpers";
-import { validateFeaturedLimit } from "@/pages/admin/helpers/carValidation";
+import { getDefaultCarFormData, createPreviewCar, validateCarForm } from "@/pages/admin/features/car-form/helpers/carFormHelpers";
+import { validateFeaturedLimit } from "@/pages/admin/shared/helpers/carValidation";
 import { useCarImages } from "./useCarImages";
 import { useFeaturedCount } from "./useFeaturedCount";
 
