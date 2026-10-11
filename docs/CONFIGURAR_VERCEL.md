@@ -19,7 +19,7 @@ Añade **TODAS** estas variables (una por una):
 
 | Variable                            | Valor                  | Ejemplo                                     |
 | ----------------------------------- | ---------------------- | ------------------------------------------- |
-| `VITE_FIREBASE_API_KEY`             | Tu API Key de Firebase | `AIzaSyD_8eintBbY3U0ODi-hn9GoXCEuHmLhMTc`   |
+| `VITE_FIREBASE_API_KEY`             | Tu API Key de Firebase | `AIzaSy…TU_CLAVE`   |
 | `VITE_FIREBASE_AUTH_DOMAIN`         | Tu Auth Domain         | `autohaus-8531f.firebaseapp.com`            |
 | `VITE_FIREBASE_PROJECT_ID`          | Tu Project ID          | `autohaus-8531f`                            |
 | `VITE_FIREBASE_STORAGE_BUCKET`      | Tu Storage Bucket      | `autohaus-8531f.firebasestorage.app`        |
