@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
-    "@firebase/rules-unit-testing": "^5.0.2",
+    "@firebase/rules-unit-testing": "^4.0.1",
     "@tailwindcss/typography": "^0.5.15",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
